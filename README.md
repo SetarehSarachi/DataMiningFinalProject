@@ -3,8 +3,6 @@
 
 Team members:
 
-BharathKumar Inbasekaran
-Setareh Sarachi
-Sowmiyaa Sridharan
+BharathKumar Inbasekaran, Setareh Sarachi, Sowmiyaa Sridharan
 
-All right reserved. 
+All rights reserved. 
