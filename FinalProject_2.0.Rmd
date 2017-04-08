@@ -1,0 +1,149 @@
+---
+title: "FinalProject_2.0"
+author: "Sowmiyaa Sridharan"
+date: "April 8, 2017"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+processed_fake <- read.csv("preprocessed_fake.csv")
+#Removing uuid and default 'x' column
+processed_fake<- processed_fake[,c(-1,-3)]
+
+#bs_count<-data.frame(table(processed_fake$type))
+#colnames(processed_fake)
+#k_means_data <- processed_fake[,c(3,6,7,8,9,10,11,12,13,14,16)]
+#getting error
+#k_means <- kmeans(k_means_data, centers = 9, nstart = 10)
+#library(cluster)
+#Hierachial
+#Complete
+#complete_unemp <- agnes(k_means_data, diss = FALSE, metric = "euclidean", method = "complete")
+#plot(complete_unemp, which.plots = 2)
+```
+
+```{r PreProcessing}
+#Converting domain_rank 'NA' to zero(0)
+processed_fake$author <- as.character(processed_fake$author)
+processed_fake$title <- as.character(processed_fake$title)
+processed_fake$crawled <- as.character(processed_fake$crawled)
+processed_fake$site_url <- as.character(processed_fake$site_url)
+
+processed_fake$domain_rank[which(is.na(processed_fake$domain_rank))] <- 0
+
+df_data <- processed_fake[,c(3,6,7,8,9,10,11,12,13,14,15,16)]
+df_data <- df_data[,c(-1,-2)]
+
+df_data$domain_rank <- as.numeric(df_data$domain_rank)
+  df_data$replies_count <- as.numeric((df_data$replies_count))
+  df_data$participants_count <- as.numeric((df_data$participants_count))
+  df_data$comments <- as.numeric((df_data$comments))
+  df_data$likes<- as.numeric((df_data$likes))
+  df_data$shares <- as.numeric((df_data$shares))
+```
+  
+```{r MultinomReg}  
+library(nnet)
+model_logit<-multinom(formula= type ~.,data = df_data)
+```
+
+```{r RandomForest}
+library(randomForest)
+rf_model <- randomForest(formula = type ~., data = df_data,ntree=100)
+importance(rf_model)
+str(df_data)
+```
+
+```{r kFoldRandomForest}
+library(randomForest)
+library(MASS) 
+library(tree)
+library(party)
+decisionTree_matr <- as.matrix(df_data)
+
+```
+
+```{r 1Vs1_bait_satire}
+table(df_data$type)
+bait_data <- df_data[which(df_data$type %in% c("bait", "satire")),]
+bait_data$type <- as.character(bait_data$type)
+#bait_data$type[-which(bait_data$type %in% "bait")] <- "not_bait"
+table(bait_data$type)
+bait_data$type[which(bait_data$type %in% "bait")] <- 0
+bait_data$type[which(bait_data$type %in% "satire")] <- 1
+bait_data$type <- as.factor(bait_data$type)
+```
+
+```{r ModelMatrix}
+#Model Matrix
+model.mat<-model.matrix(bait_data$type~.,data=bait_data)[,-1]
+model.mat[1:3, ]
+model.mat <- as.data.frame(model.mat) #converting into data frame
+model.mat$type <- bait_data$type
+```
+
+```{r Logit}
+#  10 fold cross validation for logit
+for (i in 1:nrow(model.mat))
+  model.mat$group[i]=(i%%10)
+#eapply(.GlobalEnv,typeof)    #library(glmnet)
+result_act  = dim(1)          #result_pred = dim(1)
+result_noF_act = dim(1)
+
+for (i in c(0:9)) 
+  {
+  training=((model.mat[model.mat$group != i, c(1:38)]))  ## traindata 
+  testing=((model.mat[model.mat$group == i, c(1:38)]))## testdata 
+    lg <- glm(type ~ .,
+              data = training,
+              family = "binomial")
+    pred <- predict(lg,newdata=testing,type="response")
+                    
+  dat <- data.frame(Actual = model.mat$type[model.mat$group == i], Predicted = pred)
+  btest=floor(pred+0.5) 
+  dat_floored <- data.frame(Actual = model.mat$type[model.mat$group == i], Predicted = btest)
+  result_noF_act=rbind(result_noF_act,dat)
+  result_act=rbind(result_act,dat_floored)
+  #result_pred = rbind(result_pred, btest)  
+} 
+
+head(result_act)
+```
+
+```{r Evaluation}
+lg.conf <- table(model.mat$type,result_act$Predicted)
+names(attributes(lg.conf)$dimnames) <- c("Actual","Predicted")
+lg.conf
+#Error
+lg.error <- (lg.conf[2,1]+lg.conf[1,2])/nrow(model.mat)
+lg.error
+#Accuracy
+  lg.acc <- (lg.conf[1,1]+lg.conf[2,2])/nrow(model.mat)
+  lg.acc
+#Precision and Recall
+  precision <- (lg.conf[1,1]) / (lg.conf[1,1]+lg.conf[2,1])
+  precision
+  recall <- (lg.conf[1,1]) / (lg.conf[1,1]+ lg.conf[1,2]) 
+  recall
+#F-score
+   f_score_logit<- (2* precision*recall)/ (precision+recall)
+   f_score_logit
+# AUC
+library(pROC)
+  ROC1 <- roc(dat$Actual, dat$Predicted)
+  plot(ROC1, col = "blue")
+  AUC1 <- auc(ROC1)
+  AUC1
+#For ROCR Plot
+suppressWarnings( library(ROCR))
+rocr_lg <- prediction(result_noF_act$Predicted, model.mat$type)
+str(rocr_lg)
+roc_lg <- performance(rocr_lg, "sens", "fpr")
+str(roc_lg)
+plot(roc_lg)
+lg.output <- c(lg.acc,lg.error,precision,recall,f_score_logit,AUC1)
+#Final Table of all values
+  final_table <- data.frame(Accuracy = lg.acc,Error = lg.error, Precision = precision, Recall = recall,F_Score = f_score_logit, AUC = AUC1 )
+```
+
+
