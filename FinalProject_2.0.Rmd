@@ -10,13 +10,55 @@ processed_fake <- read.csv("preprocessed_fake.csv")
 #Removing uuid and default 'x' column
 processed_fake<- processed_fake[,c(-1,-3)]
 
-bs_count<-data.frame(table(processed_fake$type))
-colnames(processed_fake)
-k_means_data <- processed_fake[,c(3,6,7,8,9,10,11,12,13,14,16)]
-k_means <- kmeans(k_means_data, centers = 9, nstart = 10)
-
-
-
-
+#bs_count<-data.frame(table(processed_fake$type))
+#colnames(processed_fake)
+#k_means_data <- processed_fake[,c(3,6,7,8,9,10,11,12,13,14,16)]
+#getting error
+#k_means <- kmeans(k_means_data, centers = 9, nstart = 10)
+#library(cluster)
+#Hierachial
+#Complete
+#complete_unemp <- agnes(k_means_data, diss = FALSE, metric = "euclidean", method = "complete")
+#plot(complete_unemp, which.plots = 2)
 ```
 
+```{r PreProcessing}
+#Converting domain_rank 'NA' to zero(0)
+processed_fake$author <- as.character(processed_fake$author)
+processed_fake$title <- as.character(processed_fake$title)
+processed_fake$crawled <- as.character(processed_fake$crawled)
+processed_fake$site_url <- as.character(processed_fake$site_url)
+
+processed_fake$domain_rank[which(is.na(processed_fake$domain_rank))] <- 0
+
+df_data <- processed_fake[,c(3,6,7,8,9,10,11,12,13,14,15,16)]
+df_data <- df_data[,c(-1,-2)]
+
+df_data$domain_rank <- as.numeric(df_data$domain_rank)
+  df_data$replies_count <- as.numeric((df_data$replies_count))
+  df_data$participants_count <- as.numeric((df_data$participants_count))
+  df_data$comments <- as.numeric((df_data$comments))
+  df_data$likes<- as.numeric((df_data$likes))
+  df_data$shares <- as.numeric((df_data$shares))
+```
+  
+```{r MultinomReg}  
+library(nnet)
+model_logit<-multinom(formula= type ~.,data = df_data)
+```
+
+```{r RandomForest}
+library(randomForest)
+rf_model <- randomForest(formula = type ~., data = df_data,ntree=100)
+importance(rf_model)
+str(df_data)
+```
+
+```{r kFoldRandomForest}
+library(randomForest)
+library(MASS) 
+library(tree)
+library(party)
+decisionTree_matr <- as.matrix(df_data)
+
+```
