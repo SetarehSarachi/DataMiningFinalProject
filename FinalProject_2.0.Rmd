@@ -74,13 +74,13 @@ decisionTree_matr <- as.matrix(df_data)
 
 ```{r 1Vs1_bait_satire}
 table(df_data$type)
-bait_data <- df_data[which(df_data$type %in% c("bait", "satire")),]
-bait_data$type <- as.character(bait_data$type)
+bait_satire <- df_data[which(df_data$type %in% c("bait", "satire")),]
+bait_satire$type <- as.character(bait_satire$type)
 #bait_data$type[-which(bait_data$type %in% "bait")] <- "not_bait"
-table(bait_data$type)
-bait_data$type[which(bait_data$type %in% "bait")] <- 0
-bait_data$type[which(bait_data$type %in% "satire")] <- 1
-bait_data$type <- as.factor(bait_data$type)
+table(bait_satire$type)
+bait_satire$type[which(bait_satire$type %in% "bait")] <- 0
+bait_satire$type[which(bait_satire$type %in% "satire")] <- 1
+bait_satire$type <- as.factor(bait_satire$type)
 ```
 
 ```{r 1Vs1_bait_bias}
@@ -715,34 +715,44 @@ k.fold.cv <- function(dataset, cl.name, k.fold=10, prob.cutoff=0.5, get.performa
   ## plot ROC
   result = data.frame(probs,actuals)
   pred = prediction(result$probs,result$actuals)
-  perf = performance(pred, "tpr","fpr")
-  plot(perf)  
   
+  return(pred)
+  
+  ########################################################################
+  ### not required
+  #########################################################################
+  #perf = performance(pred, "tpr","fpr")
+  #plot(perf)  
+  
+  #### 
   ## get other measures by using 'performance'
-  get.measure <- function(pred, measure.name='auc') {
-    perf = performance(pred,measure.name)
-    m <- unlist(slot(perf, "y.values"))
-    #     print(slot(perf, "x.values"))
-    #     print(slot(perf, "y.values"))
-    m
-  }
-  err = mean(get.measure(pred, 'err'))
-  precision = mean(get.measure(pred, 'prec'),na.rm=T)
-  recall = mean(get.measure(pred, 'rec'),na.rm=T)
-  fscore = mean(get.measure(pred, 'f'),na.rm=T)
-  cat('error=',err,'precision=',precision,'recall=',recall,'f-score',fscore,'\n')
-  auc = get.measure(pred, 'auc')
-  cat('auc=',auc,'\n')
+  #get.measure <- function(pred, measure.name='auc') {
+  #  perf = performance(pred,measure.name)
+  #  m <- unlist(slot(perf, "y.values"))
+  #  #     print(slot(perf, "x.values"))
+  #  #     print(slot(perf, "y.values"))
+  #  m
+  #}
+  #err = mean(get.measure(pred, 'err'))
+  #precision = mean(get.measure(pred, 'prec'),na.rm=T)
+  #recall = mean(get.measure(pred, 'rec'),na.rm=T)
+  #fscore = mean(get.measure(pred, 'f'),na.rm=T)
+  #cat('error=',err,'precision=',precision,'recall=',recall,'f-score',fscore,'\n')
+  #auc = get.measure(pred, 'auc')
+  #cat('auc=',auc,'\n')
   
-  if (get.performance) return (perf)
-  else
-    return(rbind(
-      error=err,
-      accuracy = 1-err,
-      precision = precision,
-      recall = recall,
-      fscore=fscore,
-      auc=auc))
+  #if (get.performance) return (perf)
+  #else
+  #  return(rbind(
+  #    error=err,
+  #    accuracy = 1-err,
+  #    precision = precision,
+  #    recall = recall,
+  #    fscore=fscore,
+  #    auc=auc))
+########################################################################
+  ### not required
+  #########################################################################
 }
 
 my.classifier <- function(dataset, cl.name, get.performance=F) {
@@ -771,16 +781,75 @@ model.mat$y <- data_combination$type
 return(model.mat)
 }
 
-model.mat1 <- model.mat.function(bait_satire)
-result_lr <- k.fold.cv(model.mat1,'lr', get.performance = T)
-result_knn1 <- k.fold.cv(model.mat1,'knn1')
-result_knn3 <- k.fold.cv(model.mat1,'knn3')
-result_knn5 <- k.fold.cv(model.mat1,'knn5')
-result_nb <- k.fold.cv(model.mat1,'nb')
-result_dtree <- k.fold.cv(model.mat1,'dtree')
-result_dtreeprune <- k.fold.cv(model.mat1,'dtreeprune')
-result_svm <- k.fold.cv(model.mat1,'svm')
-result_svmsig <- k.fold.cv(model.mat1,'svmsig')
-result_svmlin <- k.fold.cv(model.mat1,'svmlin')
-result_ada <- k.fold.cv(model.mat1,'ada')
+get.predicted <- function(result){
+  predicted.labels <- data.frame(predicted = result@labels)
+  colnames(predicted.labels) <- "algo"
+  predicted.labels$algo <- as.numeric(predicted.labels$algo)
+  predicted.labels$algo[which(predicted.labels$algo == 1)] <- 0
+  predicted.labels$algo[which(predicted.labels$algo == 2)] <- 1
+  return(predicted.labels$algo)
+}
+```
+
+
+```{r}
+library(modeest)
+
+actual.vs.predicted = data.frame(actual = bait_satire$type)
+
+result_lr <- k.fold.cv(model.mat.function(bait_satire),'lr', get.performance = T)
+actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_lr))
+colnames(actual.vs.predicted) <- c("actual", "lr")
+
+result_knn1 <- k.fold.cv(model.mat.function(bait_satire),'knn1')
+actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn1))
+colnames(actual.vs.predicted) <- c("actual", "lr", "knn1")
+
+result_knn3 <- k.fold.cv(model.mat.function(bait_satire),'knn3')
+actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn3))
+colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3')
+
+result_knn5 <- k.fold.cv(model.mat.function(bait_satire),'knn5')
+actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn5))
+colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5')
+
+result_nb <- k.fold.cv(model.mat.function(bait_satire),'nb')
+actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_nb))
+colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb')
+
+result_dtree <- k.fold.cv(model.mat.function(bait_satire),'dtree')
+actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtree))
+colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree')
+
+result_dtreeprune <- k.fold.cv(model.mat.function(bait_satire),'dtreeprune')
+actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtreeprune))
+colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune')
+
+result_svm <- k.fold.cv(model.mat.function(bait_satire),'svm')
+actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svm))
+colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune', 'svm')
+
+final.prediction <- as.data.frame(apply(actual.vs.predicted[,c(2:length(actual.vs.predicted))], 1, mfv))
+actual.vs.predicted <- cbind(actual.vs.predicted, final.prediction)
+
+##################################################################
+############ Taking too much time to execute #####################
+##################################################################
+
+#result_svmsig <- k.fold.cv(model.mat.function(bait_satire),'svmsig')
+#actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svmsig))
+#colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', #'dtreeprune', 'svm', 'svmsig')
+
+#result_svmlin <- k.fold.cv(model.mat.function(bait_satire),'svmlin')
+#actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svmlin))
+#colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', #'dtreeprune', 'svm', 'svmsig', 'svmlin')
+
+#result_ada <- k.fold.cv(model.mat.function(bait_satire),'ada')
+#actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_ada))
+#colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', #'dtreeprune', 'svm', 'svmsig', 'svmlin', 'ada')
+
+##################################################################
+############ Taking too much time to execute #####################
+##################################################################
+
 ```
