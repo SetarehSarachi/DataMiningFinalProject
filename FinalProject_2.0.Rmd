@@ -796,9 +796,9 @@ do.combine <- function(df, actual.vs.predicted){
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn3))
   colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3')
 
-  result_knn5 <- k.fold.cv(model.mat,'knn5')
-  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn5))
-  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5')
+  #result_knn5 <- k.fold.cv(model.mat,'knn5')
+  #actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn5))
+  #colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5')
 
   result_nb <- k.fold.cv(model.mat,'nb')
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_nb))
@@ -815,6 +815,12 @@ do.combine <- function(df, actual.vs.predicted){
   result_svm <- k.fold.cv(model.mat,'svm')
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svm))
   colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune', 'svm')
+  
+  actual.vs.predicted <- as.data.frame(actual.vs.predicted)
+  
+  final.prediction <- apply(actual.vs.predicted.bait_satire[,2:length(actual.vs.predicted.bait_satire)],1,mfv)
+  final.prediction <- as.data.frame(final.prediction)
+  actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, final.prediction)
 
  return(actual.vs.predicted)
 }
