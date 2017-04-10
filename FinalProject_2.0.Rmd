@@ -74,23 +74,6 @@ bait_satire$type[which(bait_satire$type %in% "satire")] <- 1
 bait_satire$type <- as.factor(bait_satire$type)
 ```
 
-```{r ModelMatrix}
-model_matrix <- function(data_combination){
-#Model Matrix
-model.mat<-model.matrix(data_combination$type~.,data=data_combination)[,-1]
-model.mat[1:3, ]
-model.mat <- as.data.frame(model.mat) #converting into data frame
-model.mat$type <- data_combination$type 
-return(model.mat)
-}
-```
-
-```{r test}
-model.mat<- model_matrix(bait_satire)
-logit_result <- logit(bait_satire)
-
-```
-
 ```{r logit function}
 lg_function <- function(training,testing){
    lg <- glm(type ~ .,data = training,family = "binomial")
@@ -99,8 +82,44 @@ lg_function <- function(training,testing){
 }
 ```
 
+```{r KNN}
+knn_function <- function(model.mat)
+#KNN model #K=5
+library (class)
+model.mat$random=runif(nrow(model.mat))
+model.mat=model.mat[order(model.mat$random),]    # shuffle the data set
+for (i in 1:nrow(model.mat))
+  model.mat$group[i]=(i%%10) + 1      # make 5 groups
+
+for (i in c(1:10))
+  {
+  traindata=((model.mat[model.mat$group != i, c(1:45)]))  ## traindata
+  traincl=as.matrix((model.mat[model.mat$group != i, "type"]))
+  test=((model.mat[model.mat$group == i, c(1:45)]))## testdata
+  a = knn(traindata,            #training data as a matrix
+          test,                 #testing data as a matrix
+          traincl,k=5)          #class for training data
+  b=data.frame(test,pred=a)
+      model.mat$results[model.mat$group == i] <- b$pred  #merge predicted into model.mat
+}
+model.mat$results[model.mat$results == 1] <- 0
+model.mat$results[model.mat$results == 2] <- 1
+#Confusion Matrix
+confmat <- table(model.mat$TARGET_Adjusted,model.mat$results)
+names(attributes(confmat)$dimnames) <- c("Actual","Predicted")
+
+```
+
+```{r test}
+model.mat<- model_matrix(bait_satire)
+logit_result <- logit(bait_satire)
+
+```
+
+
+
 ```{r Logit}
-logit <- function(data_combination){
+main <- function(data_combination){
 model.mat<-model.matrix(data_combination$type~.,data=data_combination)[,-1]
 model.mat[1:3, ]
 model.mat <- as.data.frame(model.mat) #converting into data frame
@@ -116,7 +135,7 @@ for (i in 1:nrow(model.mat))
       {
       training=((model.mat[model.mat$group != i, c(1:38)]))  ## traindata 
       testing=((model.mat[model.mat$group == i, c(1:38)]))  ## testdata
-      pred <- lg_function(training, testing)
+      #pred <- lg_function(training, testing)
       dat <- data.frame(Actual = model.mat$type[model.mat$group == i], Predicted = pred)
       btest=floor(pred+0.5) 
       dat_floored <- data.frame(Actual = model.mat$type[model.mat$group == i], Predicted = btest)
