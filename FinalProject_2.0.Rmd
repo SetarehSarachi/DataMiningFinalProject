@@ -50,6 +50,24 @@ df_data$type[which(df_data$type %in% 'rumor')] <- 'bs'
 df_data$type <- as.factor(as.character(df_data$type))
 table(df_data$type)
 ```
+
+```{r Summary and Statistical Analysis}
+domain_rank.sum <- c(summary(processed_fake$domain_rank), sd(processed_fake$domain_rank))
+spam_score.sum<-c(summary(processed_fake$spam_score), sd(processed_fake$spam_score))
+replies_count.sum<-c(summary(processed_fake$replies_count), sd(processed_fake$replies_count))
+participants_count.sum<-c(summary(processed_fake$participants_count), sd(processed_fake$participants_count))
+likes.sum<-c(summary(processed_fake$likes), sd(processed_fake$likes))
+comments.sum<-c(summary(processed_fake$comments), sd(processed_fake$comments))
+shares.sum<-c(summary(processed_fake$shares), sd(processed_fake$shares))
+
+result = rbind(domain_rank.sum, spam_score.sum, replies_count.sum, participants_count.sum, likes.sum, comments.sum, shares.sum)
+
+result = as.data.frame(result)
+colnames(result)[7] <- c("sd")
+rownames(result) <- c("Domain Rank","Spam Score","Replies Count","Participants Count", "Likes","Comments","Shares")
+library(knitr)
+kable(result, caption = 'Table 1: Summary of attributes')
+```
   
 ```{r MultinomReg}  
 library(nnet)
