@@ -1,6 +1,6 @@
 ---
 title: "FinalProject_2.0"
-author: "Sowmiyaa Sridharan"
+author: "Group 2"
 date: "April 8, 2017"
 output: word_document
 ---
