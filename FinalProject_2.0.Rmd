@@ -802,25 +802,25 @@ do.combine <- function(df, actual.vs.predicted){
 
   result_nb <- k.fold.cv(model.mat,'nb')
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_nb))
-  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb')
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb')
 
   result_dtree <- k.fold.cv(model.mat,'dtree')
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtree))
-  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree')
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree')
 
   result_dtreeprune <- k.fold.cv(model.mat,'dtreeprune')
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtreeprune))
-  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune')
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune')
 
   result_svm <- k.fold.cv(model.mat,'svm')
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svm))
-  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune', 'svm')
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune', 'svm')
   
   actual.vs.predicted <- as.data.frame(actual.vs.predicted)
   
-  final.prediction <- apply(actual.vs.predicted.bait_satire[,2:length(actual.vs.predicted.bait_satire)],1,mfv)
+  final.prediction <- apply(actual.vs.predicted[,2:length(actual.vs.predicted)],1,mfv)
   final.prediction <- as.data.frame(final.prediction)
-  actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, final.prediction)
+  actual.vs.predicted <- cbind(actual.vs.predicted, final.prediction)
 
  return(actual.vs.predicted)
 }
@@ -834,7 +834,6 @@ library(modeest)
 
 actual.vs.predicted.bait_satire = data.frame(actual = bait_satire$type)
 final.bait_satire <- do.combine(bait_satire, actual.vs.predicted.bait_satire)
-
 
 
 
