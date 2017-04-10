@@ -795,58 +795,60 @@ get.predicted <- function(result){
 ```{r}
 library(modeest)
 
-actual.vs.predicted = data.frame(actual = bait_satire$type)
+actual.vs.predicted.bait_satire = data.frame(actual = bait_satire$type)
 
-result_lr <- k.fold.cv(model.mat.function(bait_satire),'lr', get.performance = T)
-actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_lr))
-colnames(actual.vs.predicted) <- c("actual", "lr")
+model.mat.bait_satire <- model.mat.function(bait_satire)
 
-result_knn1 <- k.fold.cv(model.mat.function(bait_satire),'knn1')
-actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn1))
-colnames(actual.vs.predicted) <- c("actual", "lr", "knn1")
+result_lr <- k.fold.cv(model.mat.bait_satire,'lr', get.performance = T)
+actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_lr))
+colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr")
 
-result_knn3 <- k.fold.cv(model.mat.function(bait_satire),'knn3')
-actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn3))
-colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3')
+result_knn1 <- k.fold.cv(model.mat.bait_satire,'knn1')
+actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_knn1))
+colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1")
 
-result_knn5 <- k.fold.cv(model.mat.function(bait_satire),'knn5')
-actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn5))
-colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5')
+result_knn3 <- k.fold.cv(model.mat.bait_satire,'knn3')
+actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_knn3))
+colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3')
 
-result_nb <- k.fold.cv(model.mat.function(bait_satire),'nb')
-actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_nb))
-colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb')
+result_knn5 <- k.fold.cv(model.mat.bait_satire,'knn5')
+actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_knn5))
+colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5')
 
-result_dtree <- k.fold.cv(model.mat.function(bait_satire),'dtree')
-actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtree))
-colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree')
+result_nb <- k.fold.cv(model.mat.bait_satire,'nb')
+actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_nb))
+colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb')
 
-result_dtreeprune <- k.fold.cv(model.mat.function(bait_satire),'dtreeprune')
-actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtreeprune))
-colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune')
+result_dtree <- k.fold.cv(model.mat.bait_satire,'dtree')
+actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_dtree))
+colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree')
 
-result_svm <- k.fold.cv(model.mat.function(bait_satire),'svm')
-actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svm))
-colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune', 'svm')
+result_dtreeprune <- k.fold.cv(model.mat.bait_satire,'dtreeprune')
+actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_dtreeprune))
+colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune')
 
-final.prediction <- as.data.frame(apply(actual.vs.predicted[,c(2:length(actual.vs.predicted))], 1, mfv))
-actual.vs.predicted <- cbind(actual.vs.predicted, final.prediction)
+result_svm <- k.fold.cv(model.mat.bait_satire,'svm')
+actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_svm))
+colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune', 'svm')
+
+final.prediction <- as.data.frame(apply(actual.vs.predicted.bait_satire[,c(2:length(actual.vs.predicted.bait_satire))], 1, mfv))
+actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, final.prediction)
 
 ##################################################################
 ############ Taking too much time to execute #####################
 ##################################################################
 
-#result_svmsig <- k.fold.cv(model.mat.function(bait_satire),'svmsig')
-#actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svmsig))
-#colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', #'dtreeprune', 'svm', 'svmsig')
+#result_svmsig <- k.fold.cv(model.mat.bait_satire,'svmsig')
+#actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_svmsig))
+#colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', #'dtreeprune', 'svm', 'svmsig')
 
-#result_svmlin <- k.fold.cv(model.mat.function(bait_satire),'svmlin')
-#actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svmlin))
-#colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', #'dtreeprune', 'svm', 'svmsig', 'svmlin')
+#result_svmlin <- k.fold.cv(model.mat.bait_satire,'svmlin')
+#actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_svmlin))
+#colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', #'dtreeprune', 'svm', 'svmsig', 'svmlin')
 
-#result_ada <- k.fold.cv(model.mat.function(bait_satire),'ada')
-#actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_ada))
-#colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', #'dtreeprune', 'svm', 'svmsig', 'svmlin', 'ada')
+#result_ada <- k.fold.cv(model.mat.bait_satire,'ada')
+#actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_ada))
+#colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', #'dtreeprune', 'svm', 'svmsig', 'svmlin', 'ada')
 
 ##################################################################
 ############ Taking too much time to execute #####################
