@@ -458,14 +458,6 @@ satire_state$type <- as.factor(satire_state$type)
 table(satire_state$type)
 ```
 
-```{r ModelMatrix}
-#Model Matrix
-model.mat<-model.matrix(bait_data$type~.,data=bait_data)[,-1]
-model.mat[1:3, ]
-model.mat <- as.data.frame(model.mat) #converting into data frame
-model.mat$type <- bait_data$type
-```
-
 ```{r Logit}
 #  10 fold cross validation for logit
 for (i in 1:nrow(model.mat))
@@ -590,8 +582,8 @@ do.classification <- function(train.set, test.set,
              pfit<- prune(model, cp=model$cptable[which.min(model$cptable[,"xerror"]),"CP"])
              prob = predict(pfit, newdata=test.set)
              ## plot the pruned tree 
-             plot(pfit, uniform=TRUE,main="Pruned Classification Tree")
-             text(pfit, use.n=TRUE, all=TRUE, cex=.8)             
+             #plot(pfit, uniform=TRUE,main="Pruned Classification Tree")
+             #text(pfit, use.n=TRUE, all=TRUE, cex=.8)             
            }
            #print(cbind(prob,as.character(test.set$y)))
            prob = prob[,2]/rowSums(prob) # renormalize the prob.
@@ -609,8 +601,8 @@ do.classification <- function(train.set, test.set,
              pfit<- prune(model, cp=model$cptable[which.min(model$cptable[,"xerror"]),"CP"])
              prob = predict(pfit, newdata=test.set)
              ## plot the pruned tree 
-             plot(pfit, uniform=TRUE,main="Pruned Classification Tree")
-             text(pfit, use.n=TRUE, all=TRUE, cex=.8)             
+             #plot(pfit, uniform=TRUE,main="Pruned Classification Tree")
+             #text(pfit, use.n=TRUE, all=TRUE, cex=.8)             
            }
            #print(cbind(prob,as.character(test.set$y)))
            prob = prob[,2]/rowSums(prob) # renormalize the prob.
@@ -789,50 +781,56 @@ get.predicted <- function(result){
   predicted.labels$algo[which(predicted.labels$algo == 2)] <- 1
   return(predicted.labels$algo)
 }
+
+do.combine <- function(df, actual.vs.predicted){
+  model.mat <- model.mat.function(df)
+  result_lr <- k.fold.cv(model.mat,'lr', get.performance = T)
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_lr))
+  colnames(actual.vs.predicted) <- c("actual", "lr")
+
+  result_knn1 <- k.fold.cv(model.mat,'knn1')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn1))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1")
+
+  result_knn3 <- k.fold.cv(model.mat,'knn3')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn3))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3')
+
+  result_knn5 <- k.fold.cv(model.mat,'knn5')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn5))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5')
+
+  result_nb <- k.fold.cv(model.mat,'nb')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_nb))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb')
+
+  result_dtree <- k.fold.cv(model.mat,'dtree')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtree))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree')
+
+  result_dtreeprune <- k.fold.cv(model.mat,'dtreeprune')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtreeprune))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune')
+
+  result_svm <- k.fold.cv(model.mat,'svm')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svm))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune', 'svm')
+
+ return(actual.vs.predicted)
+}
+
 ```
 
 
-```{r}
+```{r algo_bait_satire}
+
 library(modeest)
 
 actual.vs.predicted.bait_satire = data.frame(actual = bait_satire$type)
+final.bait_satire <- do.combine(bait_satire, actual.vs.predicted.bait_satire)
 
-model.mat.bait_satire <- model.mat.function(bait_satire)
 
-result_lr <- k.fold.cv(model.mat.bait_satire,'lr', get.performance = T)
-actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_lr))
-colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr")
 
-result_knn1 <- k.fold.cv(model.mat.bait_satire,'knn1')
-actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_knn1))
-colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1")
-
-result_knn3 <- k.fold.cv(model.mat.bait_satire,'knn3')
-actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_knn3))
-colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3')
-
-result_knn5 <- k.fold.cv(model.mat.bait_satire,'knn5')
-actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_knn5))
-colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5')
-
-result_nb <- k.fold.cv(model.mat.bait_satire,'nb')
-actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_nb))
-colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb')
-
-result_dtree <- k.fold.cv(model.mat.bait_satire,'dtree')
-actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_dtree))
-colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree')
-
-result_dtreeprune <- k.fold.cv(model.mat.bait_satire,'dtreeprune')
-actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_dtreeprune))
-colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune')
-
-result_svm <- k.fold.cv(model.mat.bait_satire,'svm')
-actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, get.predicted(result_svm))
-colnames(actual.vs.predicted.bait_satire) <- c("actual", "lr", "knn1", 'knn3', 'knn5', 'nb', 'dtree', 'dtreeprune', 'svm')
-
-final.prediction <- as.data.frame(apply(actual.vs.predicted.bait_satire[,c(2:length(actual.vs.predicted.bait_satire))], 1, mfv))
-actual.vs.predicted.bait_satire <- cbind(actual.vs.predicted.bait_satire, final.prediction)
 
 ##################################################################
 ############ Taking too much time to execute #####################
