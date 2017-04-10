@@ -24,6 +24,7 @@ processed_fake<- processed_fake[,c(-1,-3)]
 
 ```{r PreProcessing}
 #changing factors to characters
+
 processed_fake$author <- as.character(processed_fake$author)
 processed_fake$title <- as.character(processed_fake$title)
 processed_fake$crawled <- as.character(processed_fake$crawled)
@@ -60,13 +61,51 @@ likes.sum<-c(summary(processed_fake$likes), sd(processed_fake$likes))
 comments.sum<-c(summary(processed_fake$comments), sd(processed_fake$comments))
 shares.sum<-c(summary(processed_fake$shares), sd(processed_fake$shares))
 
-result = rbind(domain_rank.sum, spam_score.sum, replies_count.sum, participants_count.sum, likes.sum, comments.sum, shares.sum)
+result = cbind(domain_rank.sum, spam_score.sum, replies_count.sum, participants_count.sum, likes.sum, comments.sum, shares.sum)
 
 result = as.data.frame(result)
-colnames(result)[7] <- c("sd")
-rownames(result) <- c("Domain Rank","Spam Score","Replies Count","Participants Count", "Likes","Comments","Shares")
+rownames(result)[7] <- c("sd")
+colnames(result) <- c("Domain Rank","Spam Score","Replies Count","Participants Count", "Likes","Comments","Shares")
 library(knitr)
 kable(result, caption = 'Table 1: Summary of attributes')
+
+```
+
+```{r plot of frequency of categorical vars}
+#processed_fake <-processed_fake [-which(processed_fake $type %in% "bs"),]
+library(ggplot2)
+
+#Plot of frequency of "type"
+ggplot(processed_fake , aes(x = processed_fake$type, fill = processed_fake$type))+ 
+  geom_bar(alpha = 0.5) +
+  ggtitle("Histogram Plot:  Type") + 
+  labs(x = "Type", y = "Counts") + 
+  guides(fill=guide_legend(title="Type")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Plot of frequency of "countries"
+ggplot(processed_fake , aes(x = processed_fake$country, fill = processed_fake$country))+ 
+  geom_bar(alpha = 0.5) +
+  ggtitle("Histogram Plot:  Country") + 
+  labs(x = "Country", y = "Counts") + 
+  guides(fill=guide_legend(title="Country")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Plot of distribution of types for each country
+ggplot(processed_fake , aes(x = processed_fake$country, fill = processed_fake$type))+ 
+  geom_bar(alpha = 0.5) +
+  ggtitle("Histogram Plot:  Distribution of Type for each Country") + 
+  labs(x = "Country", y = "Type Distribution") + 
+  guides(fill=guide_legend(title="Type")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(processed_fake , aes(x = processed_fake$crawled_wekdays, fill = processed_fake$type))+ 
+  geom_bar(alpha = 0.5) +
+  ggtitle("Histogram Plot:  Country") + 
+  labs(x = "Country", y = "Counts") + 
+  guides(fill=guide_legend(title="Country")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
 ```
   
 ```{r MultinomReg}  
