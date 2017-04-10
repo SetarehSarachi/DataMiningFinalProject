@@ -6,7 +6,7 @@ output: word_document
 ---
 
 ```{r setup, include=FALSE}
-processed_fake <- read.csv("preprocessed_fake.csv")
+processed_fake <- read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
 #Removing uuid and default 'x' column
 processed_fake<- processed_fake[,c(-1,-3)]
 
@@ -52,7 +52,7 @@ df_data$type <- as.factor(as.character(df_data$type))
 table(df_data$type)
 ```
 
-```{r Summary and Statistical Analysis}
+```{r Summary_and_Statistical_Analysis}
 domain_rank.sum <- c(summary(processed_fake$domain_rank), sd(processed_fake$domain_rank))
 spam_score.sum<-c(summary(processed_fake$spam_score), sd(processed_fake$spam_score))
 replies_count.sum<-c(summary(processed_fake$replies_count), sd(processed_fake$replies_count))
@@ -71,7 +71,7 @@ kable(result, caption = 'Table 1: Summary of attributes')
 
 ```
 
-```{r plot of frequency of categorical vars}
+```{r plot_of_frequency_of_categorical_vars}
 #processed_fake <-processed_fake [-which(processed_fake $type %in% "bs"),]
 library(ggplot2)
 
