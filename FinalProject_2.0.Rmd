@@ -571,8 +571,7 @@ library(class)
 library(MASS) # for the example dataset 
 library(plyr) # for recoding data
 library(ROCR)
-library(modeest)
-
+library(modeest) #for finding mode
 
 do.classification <- function(train.set, test.set, 
                               cl.name) {
@@ -583,34 +582,29 @@ do.classification <- function(train.set, test.set,
            prob = knn(train.set[,-1], test.set[,-1], cl=train.set[,1], k = 1, prob=T)
            attr(prob,"prob")[prob==0] = 1-attr(prob,"prob")[prob==0] #modified
            prob = attr(prob,"prob")
-           #print(cbind(prob,as.factor(test.set$Total)))
            prob
          },
          knn3 = { # here we test k=3; you should evaluate different k's
            prob = knn(train.set[,-1], test.set[,-1], cl=train.set[,1], k = 3, prob=T)
            attr(prob,"prob")[prob==0] = 1-attr(prob,"prob")[prob==0] #modified
            prob = attr(prob,"prob")
-           #print(cbind(prob,as.factor(test.set$Total)))
            prob
          },
          knn5 = { # here we test k=5; you should evaluate different k's
            prob = knn(train.set[,-1], test.set[,-1], cl=train.set[,1], k = 5, prob=T)
            attr(prob,"prob")[prob==0] = 1-attr(prob,"prob")[prob==0] #modified
            prob = attr(prob,"prob")
-           #print(cbind(prob,as.factor(test.set$Total)))
            prob
          },
          lr = { # logistic regression
            model = glm(y~., family=binomial, data=train.set)
           
            prob = predict(model, newdata=test.set, type="response") 
-           #print(cbind(prob,as.character(test.set$y)))
            prob
          },
          nb = {
            model = naiveBayes(y~., data=train.set)
            prob = predict(model, newdata=test.set, type="raw") 
-           #print(cbind(prob,as.character(test.set$y)))
            prob = prob[,2]/rowSums(prob) # renormalize the prob.
            prob
          },
@@ -628,7 +622,6 @@ do.classification <- function(train.set, test.set,
              #plot(pfit, uniform=TRUE,main="Pruned Classification Tree")
              #text(pfit, use.n=TRUE, all=TRUE, cex=.8)             
            }
-           #print(cbind(prob,as.character(test.set$y)))
            prob = prob[,2]/rowSums(prob) # renormalize the prob.
            #prob <- prob/sum(prob)
            prob
@@ -647,7 +640,6 @@ do.classification <- function(train.set, test.set,
              #plot(pfit, uniform=TRUE,main="Pruned Classification Tree")
              #text(pfit, use.n=TRUE, all=TRUE, cex=.8)             
            }
-           #print(cbind(prob,as.character(test.set$y)))
            prob = prob[,2]/rowSums(prob) # renormalize the prob.
            #prob <- prob/sum(prob)
            prob
@@ -660,7 +652,6 @@ do.classification <- function(train.set, test.set,
              tuned <- tune.svm(y~., data = train.set, 
                                kernel="radial", 
                                gamma = 10^(-6:-1), cost = 10^(-1:1))
-             print(summary(tuned))
              gamma = tuned[['best.parameters']]$gamma
              cost = tuned[['best.parameters']]$cost
              model = svm(y~., data = train.set, probability=TRUE, 
@@ -679,7 +670,6 @@ do.classification <- function(train.set, test.set,
              tuned <- tune.svm(y~., data = train.set, 
                                kernel="sigmoid", 
                                gamma = 10^(-6:-1), cost = 10^(-1:1))
-             print(summary(tuned))
              gamma = tuned[['best.parameters']]$gamma
              cost = tuned[['best.parameters']]$cost
              model = svm(y~., data = train.set, probability=TRUE, 
@@ -706,15 +696,12 @@ do.classification <- function(train.set, test.set,
            }
            prob = predict(model, newdata=test.set, probability=T, type="raw")
            prob = attr(prob,"probabilities")
-           #print(cbind(prob,as.factor(test.set$Total)))
-           #print(dim(prob))
            prob = prob[,which(colnames(prob)==1)]/rowSums(prob)
            prob
          },
          ada = {
            model = ada(y~., data = train.set)
            prob = predict(model, newdata=test.set, type='probs')
-           #print(cbind(prob,as.character(test.set$y)))
            prob = prob[,2]/rowSums(prob)
            prob
          }
@@ -826,7 +813,10 @@ do.combine <- function(df, actual.vs.predicted){
   final.prediction <- apply(actual.vs.predicted[,2:length(actual.vs.predicted)],1,mfv)
   final.prediction <- as.data.frame(final.prediction)
   actual.vs.predicted <- cbind(actual.vs.predicted, final.prediction)
-
+  
+  for(i in 1:length(actual.vs.predicted))
+    actual.vs.predicted[,i] <- as.factor(actual.vs.predicted[,i])
+  
  return(actual.vs.predicted)
 }
 
