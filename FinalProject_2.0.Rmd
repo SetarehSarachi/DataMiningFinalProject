@@ -6,7 +6,8 @@ output: word_document
 ---
 
 ```{r setup, include=FALSE}
-processed_fake <- read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
+#processed_fake <- read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
+processed_fake <- read.csv("preprocessed_fake.csv")
 #Removing uuid and default 'x' column
 processed_fake<- processed_fake[,c(-1,-3)]
 
@@ -78,7 +79,7 @@ library(ggplot2)
 #Plot of frequency of "type"
 ggplot(processed_fake , aes(x = processed_fake$type, fill = processed_fake$type))+ 
   geom_bar(alpha = 0.5) +
-  ggtitle("Histogram Plot:  Type") + 
+  ggtitle("Histogram Plot: Type") + 
   labs(x = "Type", y = "Counts") + 
   guides(fill=guide_legend(title="Type")) +
   theme(plot.title = element_text(hjust = 0.5))
@@ -86,7 +87,7 @@ ggplot(processed_fake , aes(x = processed_fake$type, fill = processed_fake$type)
 #Plot of frequency of "countries"
 ggplot(processed_fake , aes(x = processed_fake$country, fill = processed_fake$country))+ 
   geom_bar(alpha = 0.5) +
-  ggtitle("Histogram Plot:  Country") + 
+  ggtitle("Histogram Plot: Country") + 
   labs(x = "Country", y = "Counts") + 
   guides(fill=guide_legend(title="Country")) +
   theme(plot.title = element_text(hjust = 0.5))
