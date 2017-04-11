@@ -85,7 +85,7 @@ ggplot(processed_fake , aes(x = processed_fake$type, fill = processed_fake$type)
 
 #Plot of frequency of "countries"
 ggplot(processed_fake , aes(x = processed_fake$country, fill = processed_fake$country))+ 
-  geom_bar(alpha = 0.5) +
+  geom_bar(alpha = 0.63) +
   ggtitle("Histogram Plot:  Country") + 
   labs(x = "Country", y = "Counts") + 
   guides(fill=guide_legend(title="Country")) +
@@ -93,18 +93,22 @@ ggplot(processed_fake , aes(x = processed_fake$country, fill = processed_fake$co
 
 #Plot of distribution of types for each country
 ggplot(processed_fake , aes(x = processed_fake$country, fill = processed_fake$type))+ 
-  geom_bar(alpha = 0.5) +
+  geom_bar(alpha = 0.63) +
   ggtitle("Histogram Plot:  Distribution of Type for each Country") + 
   labs(x = "Country", y = "Type Distribution") + 
   guides(fill=guide_legend(title="Type")) +
   theme(plot.title = element_text(hjust = 0.5))
 
-ggplot(processed_fake , aes(x = processed_fake$crawled_wekdays, fill = processed_fake$type))+ 
-  geom_bar(alpha = 0.5) +
-  ggtitle("Histogram Plot:  Country") + 
-  labs(x = "Country", y = "Counts") + 
-  guides(fill=guide_legend(title="Country")) +
-  theme(plot.title = element_text(hjust = 0.5))
+#Number of Participants for each Type
+participants.count_type <- aggregate(participants_count~type,processed_fake,sum)
+ggplot(participants.count_type , aes(x = type, y = participants_count, fill= participants_count))+ 
+  geom_bar(alpha = 0.7,stat = "Identity") +
+  ggtitle("Histogram Plot: Number of Participants for each Type") + 
+  labs(x = "Type", y = "Counts") + 
+  guides(fill=guide_legend(title=" Count")) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_fill_continuous(low="red",high="yellow", limits=c(0,9000))
+  
 
 ```
   
