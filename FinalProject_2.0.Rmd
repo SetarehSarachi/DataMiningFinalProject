@@ -1030,3 +1030,66 @@ final.satire_state <- do.combine(satire_state, actual.vs.predicted.satire_state)
 ##################################################################
 
 ```
+
+```{r Type1}
+input required  =  final.bait_satire
+########################################
+confusion.matrix1 <- table(final.bait_satire$actual,final.bait_satire$predicted)
+names(attributes(confusion.matrix)$dimnames) <- c("Actual","Predicted")
+
+error1     <- (confusion.matrix1[2,1]+confusion.matrix1[1,2])/nrow(final.bait_satire)
+acccuracy1 <- (confusion.matrix1[1,1]+confusion.matrix1[2,2])/nrow(final.bait_satire)
+precision1 <- (confusion.matrix1[1,1]) / (confusion.matrix1[1,1]+confusion.matrix1[2,1])
+recall1    <- (confusion.matrix1[1,1]) / (confusion.matrix1[1,1]+confusion.matrix1[1,2]) 
+fscore1    <- (2* precision1*recall1)/ (precision1+recall1)
+  # AUC
+library(pROC)
+  final.bait_satire$actual <-as.numeric(final.bait_satire$actual)
+  ROC1 <- roc(final.bait_satire$predicted, final.bait_satire$actual)
+  plot(ROC1, col = "red")
+  AUC1 <- auc(ROC1)
+  AUC1
+  type1_output <- data.frame(Accuracy = acccuracy1,Error = error1, Precision = precision1, Recall = recall1,F_Score = fscore1, AUC = AUC1 )
+  return type1_output
+```
+
+```{r Type2}
+input required= final.bait_satire
+type2_output = dim(1)
+final_type2 = dim(1)
+no_cols <- ncol(final.bait_satire)
+
+for( i in no_cols:2)
+{
+  confusion.matrix2 <- table(final.bait_satire$actual, final.bait_satire[,i])
+  names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
+  error2     <- (confusion.matrix1[2,1]+confusion.matrix1[1,2])/nrow(final.bait_satire)
+  acccuracy2 <- (confusion.matrix1[1,1]+confusion.matrix1[2,2])/nrow(final.bait_satire)
+  precision2 <- (confusion.matrix1[1,1]) / (confusion.matrix1[1,1]+confusion.matrix1[2,1])
+  recall2    <- (confusion.matrix1[1,1]) / (confusion.matrix1[1,1]+confusion.matrix1[1,2]) 
+  fscore2    <- (2* precision1*recall1)/ (precision1+recall1)
+   # AUC
+  library(pROC)
+  final.bait_satire$actual <-as.numeric(final.bait_satire$Actual)
+  ROC2 <- roc(final.bait_satire$Predicted, final.bait_satire$Actual)
+  plot(ROC2, col = "red")
+  AUC2 <- auc(ROC2)
+  AUC2
+  type2_output <- data.frame(Accuracy = acccuracy2,Error = error2, Precision = precision2, Recall = recall2,F_Score = fscore2, AUC = AUC2)
+  final_type2<-rbind(final_type2,type2_output)
+  
+}
+final_type2
+mean = dim(1)
+# To find average of the Values
+ for( i in 1:ncol(final_type2) )
+      {
+        mean[,i] <- mean(final_type2[,i])
+        
+       }
+
+type2is <- rbind(final_type2,mean)
+
+```
+
+
