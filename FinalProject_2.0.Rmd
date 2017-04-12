@@ -1142,8 +1142,8 @@ type1_function <- function (result_table){  ## input required  =  final.bait_sat
       ROC3 <- roc(result_table$Predicted, result_table$actual)
       plot(ROC3, col = "red")
       AUC3 <- auc(ROC3)
-      type3_output <- data.frame(Accuracy = acccuracy3,Error = error3,
-      Precision = precision3, Recall = recall3,F_Score = fscore3, AUC = AUC3) 
+      type3_output <- data.frame(Accuracy = acccuracy3,Error = error3,Precision = precision3, Recall = recall3,F_Score = fscore3, AUC = AUC3) 
+      return(type3_output)
 }
 ```
 
