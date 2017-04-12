@@ -2,17 +2,8 @@ library(ggplot2)
 library(Cairo)   # For nicer ggplot2 output when deployed on Linux
 library(shiny)
 
-plots <<- list("Histogram Plot:  Type" = "type",
-               "Histogram Plot: Country" = "country",
-               "Histogram Plot:  Distribution of Type for each Country" = "typeVsCountry")
-
 ui <- fluidPage(
   fluidRow(
-    column(width = 4, class = "well",
-           selectInput("selection", "Choose a book:",
-                       choices = plots),
-           actionButton("update", "Select")
-    ),
     
     column(width = 8, class = "well",
            h4("Left plot controls right plot"),
@@ -77,6 +68,8 @@ server <- function(input, output) {
       ranges2$y <- NULL
     }
   })
+  
+  
   
 }
 
