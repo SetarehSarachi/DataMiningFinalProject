@@ -6,14 +6,15 @@ output: word_document
 ---
 
 ```{r setup, include=FALSE}
-#processed_fake <- read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
-processed_fake <- read.csv("preprocessed_fake.csv")
+processed_fake <- read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
+#processed_fake <- read.csv("preprocessed_fake.csv")
 #Removing uuid and default 'x' column
 processed_fake<- processed_fake[,c(-1,-3)]
 ```
 
 ```{r PreProcessing}
 #changing factors to characters
+
 processed_fake$author <- as.character(processed_fake$author)
 processed_fake$title <- as.character(processed_fake$title)
 processed_fake$crawled <- as.character(processed_fake$crawled)
@@ -552,7 +553,7 @@ do.classification <- function(train.set, test.set, cl.name) {
          dtree = {
            model = rpart(y~., data=train.set)
                      
-           prob = predict(model, newdata=test.set)
+          prob = predict(model, newdata=test.set)
            
            if (0) { # here we use the default tree, 
              ## you should evaluate different size of tree
@@ -650,7 +651,8 @@ do.classification <- function(train.set, test.set, cl.name) {
 }
 
 k.fold.cv <- function(dataset, cl.name, k.fold=10, prob.cutoff=0.5, get.performance=F) {
-  ## default: 10-fold CV, cut-off 0.5 
+  ## default: 10-fold CV, cut-off 0.5
+
   n.obs <- nrow(dataset) # no. of observations 
   s = sample(n.obs)
   errors = dim(k.fold)
@@ -704,6 +706,7 @@ get.predicted <- function(result){
 }
 
 do.combine <- function(df, actual.vs.predicted){
+
   model.mat <- model.mat.function(df)
   result_lr <- k.fold.cv(model.mat,'lr', get.performance = T)
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_lr))

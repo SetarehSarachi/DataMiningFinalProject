@@ -140,6 +140,16 @@ fake$type[which(fake$site_url %in% "thedailysheeple.com")] <- "conspiracy"
 fake$type[which(fake$site_url %in% "thedailymash.co.uk")] <- "satire"
 fake$type <- as.factor(fake$type)
 
+processed_fake$author[which(processed_fake$author %in% "Doc Farmer✓\u1d5b\u1d49ʳ\u1da6\u1da0\u1da6\u1d49\u1d48 \u1d48\u1d49\u1d56ˡ\u1d52ʳ\u1d43\u1d47ˡ\u1d49")] <- "DocFarmer"
+
+processed_fake$author[which(processed_fake$author %in% "LinTaylor ✓vitrified")] <- "LinTaylor"
+
+processed_fake$author[which(processed_fake$author %in% "MarciaTheMurkyMuse\U0001f320 Variegated")] <- "MarciaTheMurkyMuse"
+
+processed_fake$author[which(processed_fake$author %in% "Michelle ✓classified")] <- "Michelle"
+
+processed_fake$author[which(processed_fake$author %in% "overboosted ✓\u1d30\u1d31\u1d3e\u1d38\u1d3c\u1d3f\u1d2c\u1d2e\u1d38\u1d31")] <- "overboosted"
+
 write.csv(fake, "/Users/setaresarachi/Desktop/fake.csv")
 #Adding Weekday as a column
 library(lubridate)
