@@ -64,26 +64,19 @@ kable(result, caption = 'Table 1: Summary of attributes')
 library(ggplot2)
 #Plot of frequency of "type"
 ggplot(processed_fake , aes(x = processed_fake$type, fill = processed_fake$type))+ 
-<<<<<<< HEAD
-  geom_bar(alpha = 0.5) +
-  ggtitle("Histogram Plot: Type") + 
-=======
+
   geom_bar(alpha = 0.8) +
   ggtitle("Histogram Plot:  Type") + 
->>>>>>> origin/master
+
   labs(x = "Type", y = "Counts") + 
   guides(fill=guide_legend(title="Type")) +
   theme(plot.title = element_text(hjust = 0.5))
 
 #Plot of frequency of "countries"
 ggplot(processed_fake , aes(x = processed_fake$country, fill = processed_fake$country))+ 
-<<<<<<< HEAD
-  geom_bar(alpha = 0.5) +
-  ggtitle("Histogram Plot: Country") + 
-=======
+
   geom_bar(alpha = 0.63) +
   ggtitle("Histogram Plot:  Country") + 
->>>>>>> origin/master
   labs(x = "Country", y = "Counts") + 
   guides(fill=guide_legend(title="Country")) +
   theme(plot.title = element_text(hjust = 0.5))
