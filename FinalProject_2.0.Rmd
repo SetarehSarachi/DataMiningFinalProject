@@ -505,68 +505,6 @@ satire_state$type <- as.factor(satire_state$type)
 table(satire_state$type)
 ```
 
-```{r Logit}
-#10 fold cross validation for logit
-for (i in 1:nrow(model.mat))
-  model.mat$group[i]=(i%%10)
-
-result_act  = dim(1)
-result_noF_act = dim(1)
-
-for (i in c(0:9)) 
-  {
-          training=((model.mat[model.mat$group != i, c(1:38)]))## traindata 
-          testing=((model.mat[model.mat$group == i, c(1:38)]))## testdata 
-            lg <- glm(type ~ .,
-                      data = training,
-                      family = "binomial")
-            pred <- predict(lg,newdata=testing,type="response")
-                            
-          dat <- data.frame(Actual = model.mat$type[model.mat$group == i], Predicted = pred)
-          btest=floor(pred+0.5) 
-          dat_floored <- data.frame(Actual = model.mat$type[model.mat$group == i], Predicted = btest)
-          result_noF_act=rbind(result_noF_act,dat)
-          result_act=rbind(result_act,dat_floored)
-  } 
-head(result_act)
-```
-
-```{r Evaluation}
-lg.conf <- table(model.mat$type,result_act$Predicted)
-names(attributes(lg.conf)$dimnames) <- c("Actual","Predicted")
-lg.conf
-#Error
-lg.error <- (lg.conf[2,1]+lg.conf[1,2])/nrow(model.mat)
-lg.error
-#Accuracy
-  lg.acc <- (lg.conf[1,1]+lg.conf[2,2])/nrow(model.mat)
-  lg.acc
-#Precision and Recall
-  precision <- (lg.conf[1,1]) / (lg.conf[1,1]+lg.conf[2,1])
-  precision
-  recall <- (lg.conf[1,1]) / (lg.conf[1,1]+ lg.conf[1,2]) 
-  recall
-#F-score
-   f_score_logit<- (2* precision*recall)/ (precision+recall)
-   f_score_logit
-# AUC
-library(pROC)
-  ROC1 <- roc(dat$Actual, dat$Predicted)
-  plot(ROC1, col = "blue")
-  AUC1 <- auc(ROC1)
-  AUC1
-#For ROCR Plot
-suppressWarnings( library(ROCR))
-rocr_lg <- prediction(result_noF_act$Predicted, model.mat$type)
-str(rocr_lg)
-roc_lg <- performance(rocr_lg, "sens", "fpr")
-str(roc_lg)
-plot(roc_lg)
-lg.output <- c(lg.acc,lg.error,precision,recall,f_score_logit,AUC1)
-#Final Table of all values
-  final_table <- data.frame(Accuracy = lg.acc,Error = lg.error, Precision = precision, Recall = recall,F_Score = f_score_logit, AUC = AUC1 )
-```
-
 ```{r Yuru_style}
 library(e1071) # for NB and SVM
 library(rpart) # for decision tree
@@ -743,18 +681,6 @@ k.fold.cv <- function(dataset, cl.name, k.fold=10, prob.cutoff=0.5, get.performa
   
   return(pred)
 
-}
-
-my.classifier <- function(dataset, cl.name, get.performance=F) {
-  n.obs <- nrow(dataset) # no. of observations in dataset
-  n.cols <- ncol(dataset) # no. of predictors
-  cat('my dataset:',
-      n.obs,'observations',
-      n.cols-1,'predictors','\n')
-  print(dataset[1:3,])
-  cat('label (y) distribution:')
-  print(table(dataset$y))
-  k.fold.cv(dataset, cl.name, k.fold=10, prob.cutoff=0.5, get.performance=get.performance)
 }
 
 normalize <- function(x) {
@@ -1034,117 +960,108 @@ final.satire_state <- do.combine(satire_state, actual.vs.predicted.satire_state)
 
 ```
 
-```{r Type1}
-type1_function <- function (result_table){  ## input required  =  final.bait_satire
+```{r Evaluation_Implementation}
+evaluation_function <- function (result_table){
         library(pROC)
+#Type 1 Implementation  
         confusion.matrix1 <- table(result_table$actual,result_table$final.prediction)
         names(attributes(confusion.matrix1)$dimnames) <- c("Actual","Predicted")
-        
         error1     <- (confusion.matrix1[2,1]+confusion.matrix1[1,2])/nrow(result_table)
-        acccuracy1 <- (confusion.matrix1[1,1]+confusion.matrix1[2,2])/nrow(result_table)
+        accuracy1  <- (confusion.matrix1[1,1]+confusion.matrix1[2,2])/nrow(result_table)
         precision1 <- (confusion.matrix1[1,1]) / (confusion.matrix1[1,1]+confusion.matrix1[2,1])
         recall1    <- (confusion.matrix1[1,1]) / (confusion.matrix1[1,1]+confusion.matrix1[1,2]) 
         fscore1    <- (2* precision1*recall1)/ (precision1+recall1)
-        #AUC
         result_table$actual <-as.numeric(result_table$actual)
         ROC1 <- roc(result_table$final.prediction, result_table$actual)
-        plot(ROC1, col = "red")
         AUC1 <- auc(ROC1)
-        type1_output <- data.frame(Accuracy = acccuracy1,Error = error1, Precision = precision1, Recall =     recall1,F_Score = fscore1, AUC = AUC1 )
-        return (type1_output)
-}
-
-```
-
-```{r Type2}
-  type2_function <- function (result_table){ ## input required  =  final.bait_satire
-      type2_output = dim(1)
-      final_type2 = dim(1)
-      no_cols <- ncol(result_table)-1 #removing the last column, which is "final prediction"
-      library(pROC)
+        type1_output <- data.frame(Accuracy = accuracy1,Error = error1, Precision = precision1, Recall =     recall1,F_Score = fscore1, AUC = AUC1 )
+        ############# return (type1_output)
+        
+#Type 2 Implementation  
+        type2_output = dim(1)
+        final_type2 = dim(1)
+        no_cols <- ncol(result_table)-1  #removing the last column, which is "final prediction"
         
         for( i in no_cols:2)
             {
                 confusion.matrix2 <- table(result_table$actual, result_table[,i])
                 names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
                 error2     <- (confusion.matrix2[2,1]+confusion.matrix2[1,2])/nrow(result_table)
-                acccuracy2 <- (confusion.matrix2[1,1]+confusion.matrix2[2,2])/nrow(result_table)
+                accuracy2 <- (confusion.matrix2[1,1]+confusion.matrix2[2,2])/nrow(result_table)
                 precision2 <- (confusion.matrix2[1,1]) / (confusion.matrix2[1,1]+confusion.matrix2[2,1])
                 recall2    <- (confusion.matrix2[1,1]) / (confusion.matrix2[1,1]+confusion.matrix2[1,2]) 
                 fscore2    <- (2* precision2*recall2)/ (precision2+recall2)
-                #AUC
                 result_table$actual <-as.numeric(result_table$actual)
-                ROC2 <- roc(final.bait_satire$final.prediction, final.bait_satire$actual)
-                plot(ROC2, col = "red")
+                ROC2 <- roc(result_table$final.prediction, result_table$actual)
                 AUC2 <- auc(ROC2)
-                type2_output <- data.frame(Accuracy = acccuracy2,Error = error2, Precision = precision2, Recall = recall2,F_Score = fscore2, AUC = AUC2)
+                type2_output <- data.frame(Accuracy = accuracy2,Error = error2, Precision = precision2, Recall = recall2,F_Score = fscore2, AUC = AUC2)
                 final_type2<-rbind(final_type2,type2_output)
             }
 
-      mean <- as.data.frame(mean(dim(1)))
-      #To find average of the Values
+        mean <- as.data.frame(mean(dim(1)))
+        #To find average of the Values
         for( i in 1:ncol(final_type2) )
             {
                mean[,i] <- mean(final_type2[,i])
             }
 
-      colnames(mean) <- c("Accuracy","Error","Precision","Recall","F_Score","AUC")
-      final_type2 <- rbind(final_type2,mean)
-      return(final_type2)
-  }
-```
+        colnames(mean) <- c("Accuracy","Error","Precision","Recall","F_Score","AUC")
+        ##########return(mean)
+        
+#Type 3 Implementation        
+        type3_output = dim(1)
 
-```{r Type3}
-  type3_function <- function(result_table){
-      library(pROC)
-      type3_output = dim(1)
-
-      confusion.matrix3_7 <- table(result_table$actual, result_table[,8])
-      names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
-
-      confusion.matrix3_6 <- table(result_table$actual, result_table[,7])
-      names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
-    
-      confusion.matrix3_5 <- table(result_table$actual, result_table[,6])
-      names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
-    
-      confusion.matrix3_4 <- table(result_table$actual, result_table[,5])
-      names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
-    
-      confusion.matrix3_3 <- table(result_table$actual, result_table[,4])
-      names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
-    
-      confusion.matrix3_2 <- table(result_table$actual, result_table[,3])
-      names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
-    
-      confusion.matrix3_1 <- table(result_table$actual, result_table[,2])
-      names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
-
-      true_pos <- mean(confusion.matrix3_1[1,1]+confusion.matrix3_2[1,1]+confusion.matrix3_3[1,1]+confusion.matrix3_4[1,1]+confusion.matrix3_5[1,1]+confusion.matrix3_6[1,1]+confusion.matrix3_7[1,1])
-    
-      false_neg <- mean(confusion.matrix3_1[1,2]+confusion.matrix3_2[1,2]+confusion.matrix3_3[1,2]+confusion.matrix3_4[1,2]+confusion.matrix3_5[1,2]+confusion.matrix3_6[1,2]+confusion.matrix3_7[1,2])
-    
-      false_pos <- mean(confusion.matrix3_1[2,1]+confusion.matrix3_2[2,1]+confusion.matrix3_3[2,1]+confusion.matrix3_4[2,1]+confusion.matrix3_5[2,1]+confusion.matrix3_6[2,1]+confusion.matrix3_7[2,1])
-    
-      true_neg <- mean(confusion.matrix3_1[2,2]+confusion.matrix3_2[2,2]+confusion.matrix3_3[2,2]+confusion.matrix3_4[2,2]+confusion.matrix3_5[2,2]+confusion.matrix3_6[2,2]+confusion.matrix3_7[2,2])
-
-      c1 <- c(true_pos,false_neg)
-      c2 <- c(false_pos,true_neg)
-      confusion.matrix3 <- rbind(c1,c2)
-
-      error3 <- (confusion.matrix3[2,1]+confusion.matrix3[1,2])/nrow(result_table)
-      acccuracy3 <- (confusion.matrix3[1,1]+confusion.matrix3[2,2])/nrow(result_table)
-      precision3 <- (confusion.matrix3[1,1])/(confusion.matrix3[1,1]+confusion.matrix3[2,1])
-      recall3 <- (confusion.matrix3[1,1])/(confusion.matrix3[1,1]+confusion.matrix3[1,2])
-      fscore3 <- (2* precision3*recall3)/ (precision3+recall3)
-      #AUC
-      result_table$actual <-as.numeric(result_table$actual)
-      ROC3 <- roc(result_table$Predicted, result_table$actual)
-      plot(ROC3, col = "red")
-      AUC3 <- auc(ROC3)
-      type3_output <- data.frame(Accuracy = acccuracy3,Error = error3,Precision = precision3, Recall = recall3,F_Score = fscore3, AUC = AUC3) 
-      return(type3_output)
+        confusion.matrix3_7 <- table(result_table$actual, result_table[,8])
+        names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
+  
+        confusion.matrix3_6 <- table(result_table$actual, result_table[,7])
+        names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
+      
+        confusion.matrix3_5 <- table(result_table$actual, result_table[,6])
+        names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
+      
+        confusion.matrix3_4 <- table(result_table$actual, result_table[,5])
+        names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
+      
+        confusion.matrix3_3 <- table(result_table$actual, result_table[,4])
+        names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
+      
+        confusion.matrix3_2 <- table(result_table$actual, result_table[,3])
+        names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
+      
+        confusion.matrix3_1 <- table(result_table$actual, result_table[,2])
+        names(attributes(confusion.matrix2)$dimnames) <- c("Actual","Predicted")
+  
+        true_pos <- mean(confusion.matrix3_1[1,1],confusion.matrix3_2[1,1],confusion.matrix3_3[1,1],confusion.matrix3_4[1,1],confusion.matrix3_5[1,1],confusion.matrix3_6[1,1],confusion.matrix3_7[1,1])
+      
+        false_neg <- mean(confusion.matrix3_1[1,2],confusion.matrix3_2[1,2],confusion.matrix3_3[1,2],confusion.matrix3_4[1,2],confusion.matrix3_5[1,2],confusion.matrix3_6[1,2],confusion.matrix3_7[1,2])
+      
+        false_pos <- mean(confusion.matrix3_1[2,1],confusion.matrix3_2[2,1],confusion.matrix3_3[2,1],confusion.matrix3_4[2,1],confusion.matrix3_5[2,1],confusion.matrix3_6[2,1],confusion.matrix3_7[2,1])
+      
+        true_neg <- mean(confusion.matrix3_1[2,2],confusion.matrix3_2[2,2],confusion.matrix3_3[2,2],confusion.matrix3_4[2,2],confusion.matrix3_5[2,2],confusion.matrix3_6[2,2],confusion.matrix3_7[2,2])
+  
+        c1 <- c(true_pos,false_neg)
+        c2 <- c(false_pos,true_neg)
+        confusion.matrix3 <- rbind(c1,c2)
+  
+        error3 <- (confusion.matrix3[2,1]+confusion.matrix3[1,2])/nrow(result_table)
+        accuracy3 <- (confusion.matrix3[1,1]+confusion.matrix3[2,2])/nrow(result_table)
+        precision3 <- (confusion.matrix3[1,1])/(confusion.matrix3[1,1]+confusion.matrix3[2,1])
+        recall3 <- (confusion.matrix3[1,1])/(confusion.matrix3[1,1]+confusion.matrix3[1,2])
+        fscore3 <- (2* precision3*recall3)/ (precision3+recall3)
+        result_table$actual <-as.numeric(result_table$actual)
+        ROC3 <- roc(result_table$final.prediction, result_table$actual)
+        AUC3 <- auc(ROC3)
+        type3_output <- data.frame(Accuracy = accuracy3,Error = error3,Precision = precision3, Recall = recall3,F_Score = fscore3, AUC = AUC3) 
+        #########return(type3_output)
+        
+        final_eval_table <- rbind(type1_output,mean,type3_output)
+        eval_names<-as.data.frame(c("General","Macro","Micro"))
+        colnames(eval_names)<- c("Evaluation Method")
+        final_eval_table <- cbind(eval_names,final_eval_table)
+        return(final_eval_table)
 }
 ```
+
 
 
