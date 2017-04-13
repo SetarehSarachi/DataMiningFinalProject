@@ -757,8 +757,9 @@ do.combine <- function(df, actual.vs.predicted){
 
 ```{r algo_bait_satire}
 actual.vs.predicted.bait_satire = data.frame(actual = bait_satire$type)
-final.bait_satire <- do.combine(bait_satire[,-1], actual.vs.predicted.bait_satire)
-final.bait_satire <- cbind(bait_satire$X, final.bait_satire)
+final.bait_satire <- data.frame(x = bait_satire$X)
+#final.bait_satire <- do.combine(bait_satire[,-1], actual.vs.predicted.bait_satire)
+final.bait_satire <- cbind(final.bait_satire, do.combine(bait_satire[,-1], actual.vs.predicted.bait_satire))
 
 ```
 
