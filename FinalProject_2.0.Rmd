@@ -6,8 +6,8 @@ output: word_document
 ---
 
 ```{r setup, include=FALSE}
-processed_fake <- read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
-#processed_fake <- read.csv("preprocessed_fake.csv")
+#processed_fake <- read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
+processed_fake <- read.csv("preprocessed_fake.csv")
 #Removing uuid and default 'x' column
 processed_fake<- processed_fake[,c(-1,-3)]
 ```
