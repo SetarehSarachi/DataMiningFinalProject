@@ -1,0 +1,55 @@
+---
+title: "FilesForWordCloud"
+author: "Sowmiyaa Sridharan"
+date: "April 13, 2017"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+processed_fake <- read.csv("C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/preprocessed_fake.csv")
+
+processed_fake$type[which(processed_fake$type %in% "rumor")] <- "bs"
+processed_fake$type <- as.factor(as.character(processed_fake$type))
+
+#Only Title and type
+wordcloud_data <- data.frame(processed_fake[,c(6,17)])
+
+```
+
+```{r CreatingFiles}
+
+#Creating files for each classification type
+bait <- data.frame(filter(wordcloud_data, grepl('bait', type))[,1])
+
+bias <- data.frame(filter(wordcloud_data, grepl('bias', type))[,1])
+
+bs   <- data.frame(filter(wordcloud_data, grepl('bs', type))[,1])
+
+conspiracy <- data.frame(filter(wordcloud_data, grepl('conspiracy', type))[,1])
+
+fake<- data.frame(filter(wordcloud_data, grepl('fake', type))[,1])
+
+hate <- data.frame(filter(wordcloud_data, grepl('hate', type))[,1])
+
+junksci <- data.frame(filter(wordcloud_data, grepl('junksci', type))[,1])
+
+satire <- data.frame(filter(wordcloud_data, grepl('satire', type))[,1])
+
+state <- data.frame(filter(wordcloud_data, grepl('state', type))[,1])
+
+
+```
+
+```{r WritingFiles}
+
+write.csv(bait, "C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/bait.txt.gz")
+write.csv(bias, "C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/bias.txt.gz")
+write.csv(bs, "C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/bs.txt.gz")
+write.csv(conspiracy, "C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/conspiracy.txt.gz")
+write.csv(fake, "C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/fake.txt.gz")
+write.csv(hate, "C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/hate.txt.gz")
+write.csv(junksci, "C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/junksci.txt.gz")
+write.csv(satire, "C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/satire.txt.gz")
+write.csv(state, "C:/Users/sowmi_n4gxixd/Documents/GitHub/WordCloud/state.txt.gz")
+```
