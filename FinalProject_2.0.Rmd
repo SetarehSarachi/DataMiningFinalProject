@@ -24,7 +24,7 @@ processed_fake$site_url <- as.character(processed_fake$site_url)
 processed_fake$domain_rank[which(is.na(processed_fake$domain_rank))] <- 0
 
 #taking required columns
-df_data <- processed_fake[,c(1,3,6,7,8,9,10,11,12,13,14,15,16)]
+df_data <- processed_fake[,c(1,2,5,6,7,8,9,10,11,12,13,14,15)]
 #df_data <- df_data[,c(-1,-2)]
 
 #converting integer to numeric
@@ -758,15 +758,14 @@ do.combine <- function(df, actual.vs.predicted){
 ```{r algo_bait_satire}
 actual.vs.predicted.bait_satire = data.frame(actual = bait_satire$type)
 final.bait_satire <- do.combine(bait_satire[,-1], actual.vs.predicted.bait_satire)
-
-final.bait_satire <- cbind(bait_satire$x, final.bait_satire)
+final.bait_satire <- cbind(bait_satire$X, final.bait_satire)
 
 ```
 
 ```{r algo_bait_bias}
 actual.vs.predicted.bait_bias= data.frame(actual = bait_bias$type)
-final.bait_bias <- data.frame(x = bait_bias$X)
-final.bait_bias <- cbind(final.bait_bias, do.combine(bait_bias[,-1], actual.vs.predicted.bait_bias))
+final.bait_bias <- do.combine(bait_bias[,-1], actual.vs.predicted.bait_bias)
+final.bait_bias<- cbind(bait_bias$X,final.bait_bias)
 ```
 
 ```{r algo_bait_bs}
@@ -1064,6 +1063,3 @@ evaluation_function <- function (result_table){
         return(final_eval_table)
 }
 ```
-
-
-
