@@ -6,7 +6,7 @@ output: word_document
 ---
 
 ```{r setup, include=FALSE}
-#processed_fake <- read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
+processed_fake <- read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
 processed_fake <- read.csv("preprocessed_fake.csv")
 #Removing uuid and default 'x' column
 processed_fake<- processed_fake[,c(-1,-3)]
@@ -36,7 +36,7 @@ df_data$likes<- as.numeric((df_data$likes))
 df_data$shares <- as.numeric((df_data$shares))
   
 #Changing rumor to bs
-df_data$type[which(df_data$type %in% 'rumor')] <- 'bs'
+df_data$type[which(df_data$type %in% c('state','fake','rumor'))] <- 'fake'
 #removing the level rumor
 df_data$type <- as.factor(as.character(df_data$type))
 table(df_data$type)
@@ -191,24 +191,14 @@ bait_junksci$type[which(bait_junksci$type %in% "junksci")] <- 1
 bait_junksci$type <- as.factor(bait_junksci$type)
 ```
 
-```{r 1Vs1_bait_state}
+```{r 1Vs1_bias_bs}
 table(df_data$type)
-bait_state <- df_data[which(df_data$type %in% c("bait", "state")),]
-bait_state$type <- as.character(bait_state$type)
-table(bait_state$type)
-bait_state$type[which(bait_state$type %in% "bait")] <- 0
-bait_state$type[which(bait_state$type %in% "state")] <- 1
-bait_state$type <- as.factor(bait_state$type)
-```
-
-```{r 1Vs1_bs_bias}
-table(df_data$type)
-bs_bias <- df_data[which(df_data$type %in% c("bs", "bias")),]
-bs_bias$type <- as.character(bs_bias$type)
-table(bs_bias$type)
-bs_bias$type[which(bs_bias$type %in% "bs")] <- 0
-bs_bias$type[which(bs_bias$type %in% "bias")] <- 1
-bs_bias$type <- as.factor(bs_bias$type)
+bias_bs <- df_data[which(df_data$type %in% c("bias", "bs")),]
+bias_bs$type <- as.character(bias_bs$type)
+table(bias_bs$type)
+bias_bs$type[which(bias_bs$type %in% "bias")] <- 0
+bias_bs$type[which(bias_bs$type %in% "bs")] <- 1
+bias_bs$type <- as.factor(bias_bs$type)
 ```
 
 ```{r 1Vs1_bias_conspiracy}
@@ -262,17 +252,6 @@ bias_satire$type[which(bias_satire$type %in% "bias")] <- 0
 bias_satire$type[which(bias_satire$type %in% "satire")] <- 1
 bias_satire$type <- as.factor(bias_satire$type)
 table(bias_satire$type)
-```
-
-```{r 1Vs1_bias_state}
-table(df_data$type)
-bias_state <- df_data[which(df_data$type %in% c("bias", "state")),]
-bias_state$type <- as.character(bias_state$type)
-table(bias_state$type)
-bias_state$type[which(bias_state$type %in% "bias")] <- 0
-bias_state$type[which(bias_state$type %in% "state")] <- 1
-bias_state$type <- as.factor(bias_state$type)
-table(bias_state$type)
 ```
 
 ```{r 1Vs1_bs_conspiracy}
@@ -330,17 +309,6 @@ bs_satire$type <- as.factor(bs_satire$type)
 table(bs_satire$type)
 ```
 
-```{r 1Vs1_bs_state}
-table(df_data$type)
-bs_state <- df_data[which(df_data$type %in% c("bs", "state")),]
-bs_state$type <- as.character(bs_state$type)
-table(bs_state$type)
-bs_state$type[which(bs_state$type %in% "bs")] <- 0
-bs_state$type[which(bs_state$type %in% "state")] <- 1
-bs_state$type <- as.factor(bs_state$type)
-table(bs_state$type)
-```
-
 ```{r 1Vs1_conspiracy_fake}
 table(df_data$type)
 conspiracy_fake <- df_data[which(df_data$type %in% c("fake", "conspiracy")),]
@@ -385,17 +353,6 @@ conspiracy_satire$type <- as.factor(conspiracy_satire$type)
 table(conspiracy_satire$type)
 ```
 
-```{r 1Vs1_conspiracy_state}
-table(df_data$type)
-conspiracy_state <- df_data[which(df_data$type %in% c("state", "conspiracy")),]
-conspiracy_state$type <- as.character(conspiracy_state$type)
-table(conspiracy_state$type)
-conspiracy_state$type[which(conspiracy_state$type %in% "conspiracy")] <- 0
-conspiracy_state$type[which(conspiracy_state$type %in% "state")] <- 1
-conspiracy_state$type <- as.factor(conspiracy_state$type)
-table(conspiracy_state$type)
-```
-
 ```{r 1Vs1_fake_hate}
 table(df_data$type)
 fake_hate <- df_data[which(df_data$type %in% c("fake", "hate")),]
@@ -429,16 +386,6 @@ fake_satire$type <- as.factor(fake_satire$type)
 table(fake_satire$type)
 ```
 
-```{r 1Vs1_fake_state}
-table(df_data$type)
-fake_state <- df_data[which(df_data$type %in% c("fake", "state")),]
-fake_state$type <- as.character(fake_state$type)
-table(fake_state$type)
-fake_state$type[which(fake_state$type %in% "fake")] <- 0
-fake_state$type[which(fake_state$type %in% "state")] <- 1
-fake_state$type <- as.factor(fake_state$type)
-table(fake_state$type)
-```
 
 ```{r 1Vs1_hate_junksci}
 table(df_data$type)
@@ -462,17 +409,6 @@ hate_satire$type <- as.factor(hate_satire$type)
 table(hate_satire$type)
 ```
 
-```{r 1Vs1_hate_state}
-table(df_data$type)
-hate_state <- df_data[which(df_data$type %in% c("hate", "state")),]
-hate_state$type <- as.character(hate_state$type)
-table(hate_state$type)
-hate_state$type[which(hate_state$type %in% "hate")] <- 0
-hate_state$type[which(hate_state$type %in% "state")] <- 1
-hate_state$type <- as.factor(hate_state$type)
-table(hate_state$type)
-```
-
 ```{r 1Vs1_junksci_satire}
 table(df_data$type)
 junksci_satire <- df_data[which(df_data$type %in% c("junksci", "satire")),]
@@ -482,28 +418,6 @@ junksci_satire$type[which(junksci_satire$type %in% "junksci")] <- 0
 junksci_satire$type[which(junksci_satire$type %in% "satire")] <- 1
 junksci_satire$type <- as.factor(junksci_satire$type)
 table(junksci_satire$type)
-```
-
-```{r 1Vs1_junksci_state}
-table(df_data$type)
-junksci_state <- df_data[which(df_data$type %in% c("junksci", "state")),]
-junksci_state$type <- as.character(junksci_state$type)
-table(junksci_state$type)
-junksci_state$type[which(junksci_state$type %in% "junksci")] <- 0
-junksci_state$type[which(junksci_state$type %in% "state")] <- 1
-junksci_state$type <- as.factor(junksci_state$type)
-table(junksci_state$type)
-```
-
-```{r 1Vs1_satire_state}
-table(df_data$type)
-satire_state <- df_data[which(df_data$type %in% c("satire", "state")),]
-satire_state$type <- as.character(satire_state$type)
-table(hate_state$type)
-satire_state$type[which(satire_state$type %in% "satire")] <- 0
-satire_state$type[which(satire_state$type %in% "state")] <- 1
-satire_state$type <- as.factor(satire_state$type)
-table(satire_state$type)
 ```
 
 ```{r Yuru_style}
@@ -696,48 +610,48 @@ model.mat$y <- data_combination$type
 return(model.mat)
 }
 
-get.predicted <- function(result){
+get.predicted <- function(result,var1,var2){
   predicted.labels <- data.frame(predicted = result@labels)
   colnames(predicted.labels) <- "algo"
   predicted.labels$algo <- as.numeric(predicted.labels$algo)
-  predicted.labels$algo[which(predicted.labels$algo == 1)] <- 0
-  predicted.labels$algo[which(predicted.labels$algo == 2)] <- 1
+  predicted.labels$algo[which(predicted.labels$algo == 1)] <- var1
+  predicted.labels$algo[which(predicted.labels$algo == 2)] <- var2
   return(predicted.labels$algo)
 }
 
-do.combine <- function(df, actual.vs.predicted){
+do.combine <- function(df, actual.vs.predicted,var1,var2){
 
   model.mat <- model.mat.function(df)
   result_lr <- k.fold.cv(model.mat,'lr', get.performance = T)
-  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_lr))
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_lr,var1,var2))
   colnames(actual.vs.predicted) <- c("actual", "lr")
 
   result_knn1 <- k.fold.cv(model.mat,'knn1')
-  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn1))
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn1,var1,var2))
   colnames(actual.vs.predicted) <- c("actual", "lr", "knn1")
 
   result_knn3 <- k.fold.cv(model.mat,'knn3')
-  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn3))
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn3,var1,var2))
   colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3')
 
   #result_knn5 <- k.fold.cv(model.mat,'knn5')
-  #actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn5))
+  #actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn5,var1,var2))
   #colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5')
 
   result_nb <- k.fold.cv(model.mat,'nb')
-  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_nb))
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_nb,var1,var2))
   colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb')
 
   result_dtree <- k.fold.cv(model.mat,'dtree')
-  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtree))
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtree,var1,var2))
   colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree')
 
   result_dtreeprune <- k.fold.cv(model.mat,'dtreeprune')
-  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtreeprune))
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtreeprune,var1,var2))
   colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune')
 
   result_svm <- k.fold.cv(model.mat,'svm')
-  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svm))
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svm,var1,var2))
   colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune', 'svm')
   
   actual.vs.predicted <- as.data.frame(actual.vs.predicted)
@@ -758,217 +672,282 @@ do.combine <- function(df, actual.vs.predicted){
 ```{r algo_bait_satire}
 actual.vs.predicted.bait_satire = data.frame(actual = bait_satire$type)
 final.bait_satire <- data.frame(x = bait_satire$X)
-final.bait_satire <- cbind(final.bait_satire, do.combine(bait_satire[,-1], actual.vs.predicted.bait_satire))
+final.bait_satire <- cbind(final.bait_satire, do.combine(bait_satire[,-1], actual.vs.predicted.bait_satire, "bait", "satire"))
+
+final.bait_satire$actual <- as.character(final.bait_satire$actual)
+final.bait_satire$actual[which(final.bait_satire$actual %in% '0')] <- "bait"
+final.bait_satire$actual[which(final.bait_satire$actual %in% '1')] <- "satire"
+final.bait_satire$actual <- as.factor(final.bait_satire$actual)
 ```
 
 ```{r algo_bait_bias}
 actual.vs.predicted.bait_bias= data.frame(actual = bait_bias$type)
 final.bait_bias <- data.frame(x = bait_bias$X)
-final.bait_bias <- cbind(final.bait_bias, do.combine(bait_bias[,-1], actual.vs.predicted.bait_bias))
+final.bait_bias <- cbind(final.bait_bias, do.combine(bait_bias[,-1], actual.vs.predicted.bait_bias, "bait", "bias"))
+final.bait_bias$actual <- as.character(final.bait_bias$actual)
+final.bait_bias$actual[which(final.bait_bias$actual %in% '0')] <- "bait"
+final.bait_bias$actual[which(final.bait_bias$actual %in% '1')] <- "bias"
+final.bait_bias$actual <- as.factor(final.bait_bias$actual)
 ```
 
 ```{r algo_bait_bs}
 actual.vs.predicted.bait_bs = data.frame(actual = bait_bs$type)
 final.bait_bs <- data.frame(x = bait_bs$X)
-final.bait_bs <- cbind(final.bait_bs,do.combine(bait_bs[,-1], actual.vs.predicted.bait_bs))
+final.bait_bs <- cbind(final.bait_bs,do.combine(bait_bs[,-1], actual.vs.predicted.bait_bs,"bait","bs"))
+final.bait_bs$actual <- as.character(final.bait_bs$actual)
+final.bait_bs$actual[which(final.bait_bs$actual %in% '0')] <- "bait"
+final.bait_bs$actual[which(final.bait_bs$actual %in% '1')] <- "bs"
+final.bait_bs$actual <- as.factor(final.bait_bs$actual)
 ```
 
 ```{r algo_bait_conspiracy}
 actual.vs.predicted.bait_conspiracy = data.frame(actual = bait_conspiracy$type)
 final.bait_conspiracy <- data.frame(x = bait_conspiracy$X)
-final.bait_conspiracy <- cbind(final.bait_conspiracy,do.combine(bait_conspiracy[,-1],actual.vs.predicted.bait_conspiracy))
+final.bait_conspiracy <- cbind(final.bait_conspiracy,do.combine(bait_conspiracy[,-1],actual.vs.predicted.bait_conspiracy,"bait","conspiracy"))
+final.bait_conspiracy$actual <- as.character(final.bait_conspiracy$actual)
+final.bait_conspiracy$actual[which(final.bait_conspiracy$actual %in% '0')] <- "bait"
+final.bait_conspiracy$actual[which(final.bait_conspiracy$actual %in% '1')] <- "conspiracy"
+final.bait_conspiracy$actual <- as.factor(final.bait_conspiracy$actual)
 ```
 
 ```{r algo_bait_fake}
 actual.vs.predicted.bait_fake = data.frame(actual = bait_fake$type)
 final.bait_fake <- data.frame(x = bait_fake$X)
-final.bait_fake <- cbind(final.bait_fake,do.combine(bait_fake[,-1], actual.vs.predicted.bait_fake))
+final.bait_fake <- cbind(final.bait_fake,do.combine(bait_fake[,-1], actual.vs.predicted.bait_fake,"bait","fake"))
+final.bait_fake$actual <- as.character(final.bait_fake$actual)
+final.bait_fake$actual[which(final.bait_fake$actual %in% '0')] <- "bait"
+final.bait_fake$actual[which(final.bait_fake$actual %in% '1')] <- "fake"
+final.bait_fake$actual <- as.factor(final.bait_fake$actual)
 ```
 
 ```{r algo_bait_hate}
 actual.vs.predicted.bait_hate = data.frame(actual = bait_hate$type)
 final.bait_hate <- data.frame(x = bait_hate$X)
-final.bait_hate<- cbind(final.bait_hate,do.combine(bait_hate[,-1], actual.vs.predicted.bait_hate))
+final.bait_hate<- cbind(final.bait_hate,do.combine(bait_hate[,-1], actual.vs.predicted.bait_hate,"bait","hate"))
+final.bait_hate$actual <- as.character(final.bait_hate$actual)
+final.bait_hate$actual[which(final.bait_hate$actual %in% '0')] <- "bait"
+final.bait_hate$actual[which(final.bait_hate$actual %in% '1')] <- "hate"
+final.bait_hate$actual <- as.factor(final.bait_hate$actual)
 ```
 
 ```{r algo_bait_junkSci}
 actual.vs.predicted.bait_junkSci = data.frame(actual = bait_junkSci$type)
 final.bait_junkSci <- data.frame(x = bait_junkSci$X)
-final.bait_junkSci <- cbind(final.bait_junkSci,do.combine(bait_junkSci[,-1], actual.vs.predicted.bait_junkSci))
+final.bait_junkSci <- cbind(final.bait_junkSci,do.combine(bait_junkSci[,-1], actual.vs.predicted.bait_junkSci,"bait","junksci"))
+final.bait_junkSci$actual <- as.character(final.bait_junkSci$actual)
+final.bait_junkSci$actual[which(final.bait_junkSci$actual %in% '0')] <- "bait"
+final.bait_junkSci$actual[which(final.bait_junkSci$actual %in% '1')] <- "junksci"
+final.bait_junkSci$actual <- as.factor(final.bait_junkSci$actual)
 ```
 
-```{r algo_bait_state}
-actual.vs.predicted.bait_state = data.frame(actual = bait_state$type)
-final.bait_state <- data.frame(x = bait_state$X)
-final.bait_state <- cbind(final.bait_state,do.combine(bait_state[,-1], actual.vs.predicted.bait_state))
-```
-
-```{r algo_bs_bias}
-actual.vs.predicted.bs_bias = data.frame(actual = bs_bias$type)
-final.bs_bias <- data.frame(x = bs_bias$X)
-final.bs_bias <- cbind(final.bs_bias,do.combine(bs_bias[,-1], actual.vs.predicted.bs_bias))
+```{r algo_bias_bs}
+actual.vs.predicted.bias_bs = data.frame(actual = bias_bs$type)
+final.bias_bs <- data.frame(x = bias_bs$X)
+final.bias_bs <- cbind(final.bias_bs,do.combine(bias_bs[,-1], actual.vs.predicted.bias_bs,"bias","bs"))
+final.bias_bs$actual <- as.character(final.bias_bs$actual)
+final.bias_bs$actual[which(final.bias_bs$actual %in% '0')] <- "bias"
+final.bias_bs$actual[which(final.bias_bs$actual %in% '1')] <- "bs"
+final.bias_bs$actual <- as.factor(final.bias_bs$actual)
 ```
 
 ```{r algo_bias_conspiracy}
 actual.vs.predicted.bias_conspiracy = data.frame(actual = bias_conspiracy$type)
 final.bias_conspiracy <- data.frame(x = bias_conspiracy$X)
-final.bias_conspiracy <- cbind(final.bias_conspiracy,do.combine(bias_conspiracy[,-1], actual.vs.predicted.bias_conspiracy))
+final.bias_conspiracy <- cbind(final.bias_conspiracy,do.combine(bias_conspiracy[,-1],actual.vs.predicted.bias_conspiracy,"bias","conspiracy"))
+final.bias_conspiracy$actual <- as.character(final.bias_conspiracy$actual)
+final.bias_conspiracy$actual[which(final.bias_conspiracy$actual %in% '0')] <- "bias"
+final.bias_conspiracy$actual[which(final.bias_conspiracy$actual %in% '1')] <- "conspiracy"
+final.bias_conspiracy$actual <- as.factor(final.bias_conspiracy$actual)
 ```
 
 ```{r algo_bias_fake}
 actual.vs.predicted.bias_fake = data.frame(actual = bias_fake$type)
 final.bias_fake <- data.frame(x = bias_fake$X)
-final.bias_fake <- cbind(final.bias_fake,do.combine(bias_fake[,-1], actual.vs.predicted.bias_fake))
+final.bias_fake <- cbind(final.bias_fake,do.combine(bias_fake[,-1], actual.vs.predicted.bias_fake,"bias","fake"))
+final.bias_fake$actual <- as.character(final.bias_fake$actual)
+final.bias_fake$actual[which(final.bias_fake$actual %in% '0')] <- "bias"
+final.bias_fake$actual[which(final.bias_fake$actual %in% '1')] <- "fake"
+final.bias_fake$actual <- as.factor(final.bias_fake$actual)
 ```
 
 ```{r algo_bias_hate}
 actual.vs.predicted.bias_hate = data.frame(actual = bias_hate$type)
 final.bias_hate <- data.frame(x = bias_hate$X)
-final.bias_hate <- cbind(final.bias_hate,do.combine(bias_hate[,-1], actual.vs.predicted.bias_hate))
+final.bias_hate <- cbind(final.bias_hate,do.combine(bias_hate[,-1], actual.vs.predicted.bias_hate,"bias","hate"))
+final.bias_hate$actual <- as.character(final.bias_hate$actual)
+final.bias_hate$actual[which(final.bias_hate$actual %in% '0')] <- "bias"
+final.bias_hate$actual[which(final.bias_hate$actual %in% '1')] <- "hate"
+final.bias_hate$actual <- as.factor(final.bias_hate$actual)
 ```
 
 ```{r algo_bias_junksci}
 actual.vs.predicted.bias_junksci = data.frame(actual = bias_junksci$type)
 final.bias_junksci <- data.frame(x = bias_junksci$X)
-final.bias_junksci <- cbind(final.bias_junksci,do.combine(bias_junksci[,-1], actual.vs.predicted.bias_junksci))
+final.bias_junksci <- cbind(final.bias_junksci,do.combine(bias_junksci[,-1], actual.vs.predicted.bias_junksci,"bias","junksci"))
+final.bias_junksci$actual <- as.character(final.bias_junksci$actual)
+final.bias_junksci$actual[which(final.bias_junksci$actual %in% '0')] <- "bias"
+final.bias_junksci$actual[which(final.bias_junksci$actual %in% '1')] <- "junksci"
+final.bias_junksci$actual <- as.factor(final.bias_junksci$actual)
 ```
 
 ```{r algo_bias_satire}
 actual.vs.predicted.bias_satire = data.frame(actual = bias_satire$type)
 final.bias_satire <- data.frame(x = bias_satire$X)
-final.bias_satire <- cbind(final.bias_satire,do.combine(bias_satire[,-1], actual.vs.predicted.bias_satire))
-```
-
-```{r algo_bias_state}
-actual.vs.predicted.bias_state= data.frame(actual = bias_state$type)
-final.bias_state <- data.frame(x = bias_state$X)
-final.bias_state <- cbind(final.bias_state,do.combine(bias_state[,-1], actual.vs.predicted.bias_state))
+final.bias_satire <- cbind(final.bias_satire,do.combine(bias_satire[,-1], actual.vs.predicted.bias_satire,"bias","satire"))
+final.bias_satire$actual <- as.character(final.bias_satire$actual)
+final.bias_satire$actual[which(final.bias_satire$actual %in% '0')] <- "bias"
+final.bias_satire$actual[which(final.bias_satire$actual %in% '1')] <- "satire"
+final.bias_satire$actual <- as.factor(final.bias_satire$actual)
 ```
 
 ```{r algo_bs_conspiracy}
 actual.vs.predicted.bs_conspiracy = data.frame(actual = bs_conspiracy$type)
 final.bs_conspiracy <- data.frame(x = bs_conspiracy$X)
-final.bs_conspiracy <- cbidn(final.bs_conspiracy,do.combine(bs_conspiracy[,-1], actual.vs.predicted.bs_conspiracy))
+final.bs_conspiracy <- cbidn(final.bs_conspiracy,do.combine(bs_conspiracy[,-1], actual.vs.predicted.bs_conspiracy,"bs","conspiracy"))
+final.bs_conspiracy$actual <- as.character(final.bs_conspiracy$actual)
+final.bs_conspiracy$actual[which(final.bs_conspiracy$actual %in% '0')] <- "bs"
+final.bs_conspiracy$actual[which(final.bs_conspiracy$actual %in% '1')] <- "conspiracy"
+final.bs_conspiracy$actual <- as.factor(final.bs_conspiracy$actual)
 ```
 
 ```{r algo_bs_fake}
 actual.vs.predicted.bs_fake = data.frame(actual = bs_fake$type)
 final.bs_fake <- data.frame(x = bs_fake$X)
-final.bs_fake <- cbind(final.bs_fake,do.combine(bs_fake[,-1], actual.vs.predicted.bs_fake))
+final.bs_fake <- cbind(final.bs_fake,do.combine(bs_fake[,-1], actual.vs.predicted.bs_fake,"bs","fake"))
+final.bs_fake$actual <- as.character(final.bs_fake$actual)
+final.bs_fake$actual[which(final.bs_fake$actual %in% '0')] <- "bs"
+final.bs_fake$actual[which(final.bs_fake$actual %in% '1')] <- "fake"
+final.bs_fake$actual <- as.factor(final.bs_fake$actual)
 ```
 
 ```{r algo_bs_hate}
 actual.vs.predicted.bs_hate = data.frame(actual = bs_hate$type)
 final.bs_hate <- data.frame(x = bs_hate$X)
-final.bs_hate <- cbind(final.bs_hate,do.combine(bs_hate[,-1], actual.vs.predicted.bs_hate))
+final.bs_hate <- cbind(final.bs_hate,do.combine(bs_hate[,-1], actual.vs.predicted.bs_hate,"bs","hate"))
+final.bs_hate$actual <- as.character(final.bs_hate$actual)
+final.bs_hate$actual[which(final.bs_hate$actual %in% '0')] <- "bs"
+final.bs_hate$actual[which(final.bs_hate$actual %in% '1')] <- "hate"
+final.bs_hate$actual <- as.factor(final.bs_hate$actual)
 ```
 
 ```{r algo_bs_junksci}
 actual.vs.predicted.bs_junksci = data.frame(actual = bs_junksci$type)
 final.bs_junksci <- data.frame(x = bs_junksci$X)
-final.bs_junksci <- cbind(final.bs_junksci,do.combine(bs_junksci[,-1], actual.vs.predicted.bs_junksci))
+final.bs_junksci <- cbind(final.bs_junksci,do.combine(bs_junksci[,-1], actual.vs.predicted.bs_junksci,"bs","junksci"))
+final.bs_junksci$actual <- as.character(final.bs_junksci$actual)
+final.bs_junksci$actual[which(final.bs_junksci$actual %in% '0')] <- "bs"
+final.bs_junksci$actual[which(final.bs_junksci$actual %in% '1')] <- "junksci"
+final.bs_junksci$actual <- as.factor(final.bs_junksci$actual)
 ```
 
 ```{r algo_bs_satire}
 actual.vs.predicted.bs_satire = data.frame(actual = bs_satire$type)
 final.bs_satire <- data.frame(x = bs_satire$X)
-final.bs_satire <- cbind(final.bs_satire,do.combine(bs_satire[,-1], actual.vs.predicted.bs_satire))
-```
-
-```{r algo_bs_state}
-actual.vs.predicted.bs_state = data.frame(actual = bs_state$type)
-final.bs_state <- data.frame(x = bs_state$X)
-final.bs_state <- cbind(final.bs_state,do.combine(bs_state[,-1], actual.vs.predicted.bs_state))
+final.bs_satire <- cbind(final.bs_satire,do.combine(bs_satire[,-1], actual.vs.predicted.bs_satire,"bs","satire"))
+final.bs_satire$actual <- as.character(final.bs_satire$actual)
+final.bs_satire$actual[which(final.bs_satire$actual %in% '0')] <- "bs"
+final.bs_satire$actual[which(final.bs_satire$actual %in% '1')] <- "satire"
+final.bs_satire$actual <- as.factor(final.bs_satire$actual)
 ```
 
 ```{r algo_conspiracy_fake}
 actual.vs.predicted.conspiracy_fake= data.frame(actual = conspiracy_fake$type)
 final.conspiracy_fake <- data.frame(x = conspiracy_fake$X)
-final.conspiracy_fake <- cbind(final.conspiracy_fake,do.combine(conspiracy_fake[,-1], actual.vs.predicted.conspiracy_fake))
+final.conspiracy_fake <- cbind(final.conspiracy_fake,do.combine(conspiracy_fake[,-1], actual.vs.predicted.conspiracy_fake,"conspiracy","fake"))
+final.conspiracy_fake$actual <- as.character(final.conspiracy_fake$actual)
+final.conspiracy_fake$actual[which(final.conspiracy_fake$actual %in% '0')] <- "conspiracy"
+final.conspiracy_fake$actual[which(final.conspiracy_fake$actual %in% '1')] <- "fake"
+final.conspiracy_fake$actual <- as.factor(final.conspiracy_fake$actual)
 ```
 
 ```{r algo_conspiracy_hate}
 actual.vs.predicted.conspiracy_hate = data.frame(actual =conspiracy_hate$type)
 final.conspiracy_hate <- data.frame(x = conspiracy_hate$X)
-final.conspiracy_hate <- cbind(final.conspiracy_hate,do.combine(conspiracy_hate[,-1], actual.vs.predicted.conspiracy_hate))
+final.conspiracy_hate <- cbind(final.conspiracy_hate,do.combine(conspiracy_hate[,-1], actual.vs.predicted.conspiracy_hate,"conspiracy","hate"))
+final.conspiracy_hate$actual <- as.character(final.conspiracy_hate$actual)
+final.conspiracy_hate$actual[which(final.conspiracy_hate$actual %in% '0')] <- "conspiracy"
+final.conspiracy_hate$actual[which(final.conspiracy_hate$actual %in% '1')] <- "hate"
+final.conspiracy_hate$actual <- as.factor(final.conspiracy_hate$actual)
 ```
 
 ```{r algo_conspiracy_junksci}
 actual.vs.predicted.conspiracy_junksci = data.frame(actual = conspiracy_junksci$type)
 final.conspiracy_junksci <- data.frame(x = conspiracy_junksci$X)
-final.conspiracy_junksci <- cbind(final.conspiracy_junksci,do.combine(conspiracy_junksci[,-1], actual.vs.predicted.conspiracy_junksci))
+final.conspiracy_junksci <- cbind(final.conspiracy_junksci,do.combine(conspiracy_junksci[,-1], actual.vs.predicted.conspiracy_junksci,"conspiracy","junksci"))
+final.conspiracy_junksci$actual <- as.character(final.conspiracy_junksci$actual)
+final.conspiracy_junksci$actual[which(final.conspiracy_junksci$actual %in% '0')] <- "conspiracy"
+final.conspiracy_junksci$actual[which(final.conspiracy_junksci$actual %in% '1')] <- "junksci"
+final.conspiracy_junksci$actual <- as.factor(final.conspiracy_junksci$actual)
 ```
 
 ```{r algo_conspiracy_satire}
 actual.vs.predicted.conspiracy_satire = data.frame(actual = conspiracy_satire$type)
 final.conspiracy_satire <- data.frame(x = conspiracy_satire$X)
-final.conspiracy_satire <- cbind(final.conspiracy_satire,do.combine(conspiracy_satire[,-1], actual.vs.predicted.conspiracy_satire))
-```
-
-```{r algo_conspiracy_state}
-actual.vs.predicted.conspiracy_state = data.frame(actual = conspiracy_state$type)
-final.conspiracy_state <- data.frame(x = conspiracy_state$X)
-final.conspiracy_state <- cbind(final.conspiracy_state,do.combine(conspiracy_state[,-1], actual.vs.predicted.conspiracy_state))
+final.conspiracy_satire <- cbind(final.conspiracy_satire,do.combine(conspiracy_satire[,-1], actual.vs.predicted.conspiracy_satire, actual.vs.predicted.conspiracy_hate,"conspiracy","satire"))
+final.conspiracy_satire$actual <- as.character(final.conspiracy_satire$actual)
+final.conspiracy_satire$actual[which(final.conspiracy_satire$actual %in% '0')] <- "conspiracy"
+final.conspiracy_satire$actual[which(final.conspiracy_satire$actual %in% '1')] <- "satire"
+final.conspiracy_satire$actual <- as.factor(final.conspiracy_satire$actual)
 ```
 
 ```{r algo_fake_hate}
 actual.vs.predicted.fake_hate = data.frame(actual = fake_hate$type)
 final.fake_hate <- data.frame(x = fake_hate$X)
-final.fake_hate <- cbind(final.fake_hate,do.combine(fake_hate[,-1], actual.vs.predicted.fake_hate))
+final.fake_hate <- cbind(final.fake_hate,do.combine(fake_hate[,-1], actual.vs.predicted.fake_hate,"fake","hate"))
+final.fake_hate$actual <- as.character(final.fake_hate$actual)
+final.fake_hate$actual[which(final.fake_hate$actual %in% '0')] <- "fake"
+final.fake_hate$actual[which(final.fake_hate$actual %in% '1')] <- "hate"
+final.fake_hate$actual <- as.factor(final.fake_hate$actual)
 ```
 
 ```{r algo_fake_junksci}
 actual.vs.predicted.fake_junksci = data.frame(actual = fake_junksci$type)
 final.fake_junksci <- data.frame(x = fake_junksci$X)
-final.fake_junksci <- cbind(final.fake_junksci,do.combine(fake_junksci[,-1], actual.vs.predicted.fake_junksci))
+final.fake_junksci <- cbind(final.fake_junksci,do.combine(fake_junksci[,-1], actual.vs.predicted.fake_junksci,"fake","junksci"))
+final.fake_junksci$actual <- as.character(final.fake_junksci$actual)
+final.fake_junksci$actual[which(final.fake_junksci$actual %in% '0')] <- "fake"
+final.fake_junksci$actual[which(final.fake_junksci$actual %in% '1')] <- "junksci"
+final.fake_junksci$actual <- as.factor(final.fake_junksci$actual)
 ```
 
 ```{r algo_fake_satire}
 actual.vs.predicted.fake_satire = data.frame(actual = fake_satire$type)
 final.fake_satire <- data.frame(x = fake_satire$X)
-final.fake_satire <- cbind(final.fake_satire,do.combine(fake_satire[,-1], actual.vs.predicted.fake_satire))
-```
-
-```{r algo_fake_state}
-actual.vs.predicted.fake_state= data.frame(actual = fake_state$type)
-final.fake_state <- data.frame(x = fake_state$X)
-final.fake_state <- cbind(final.fake_state,do.combine(fake_state[,-1], actual.vs.predicted.fake_state))
+final.fake_satire <- cbind(final.fake_satire,do.combine(fake_satire[,-1], actual.vs.predicted.fake_satire,"fake","satire"))
+final.fake_satire$actual <- as.character(final.fake_satire$actual)
+final.fake_satire$actual[which(final.fake_satire$actual %in% '0')] <- "fake"
+final.fake_satire$actual[which(final.fake_satire$actual %in% '1')] <- "satire"
+final.fake_satire$actual <- as.factor(final.fake_satire$actual)
 ```
 
 ```{r algo_hate_junksci}
 actual.vs.predicted.hate_junksci = data.frame(actual = hate_junksci$type)
 final.hate_junksci <- data.frame(x = hate_junksci$X)
-final.hate_junksci <- cbind(final.hate_junksci,do.combine(hate_junksci[,-1], actual.vs.predicted.hate_junksci))
+final.hate_junksci <- cbind(final.hate_junksci,do.combine(hate_junksci[,-1], actual.vs.predicted.hate_junksci,"hate","junksci"))
+final.hate_junksci$actual <- as.character(final.hate_junksci$actual)
+final.hate_junksci$actual[which(final.hate_junksci$actual %in% '0')] <- "hate"
+final.hate_junksci$actual[which(final.hate_junksci$actual %in% '1')] <- "junksci"
+final.hate_junksci$actual <- as.factor(final.hate_junksci$actual)
 ```
 
 ```{r algo_hate_satire}
 actual.vs.predicted.hate_satire = data.frame(actual = hate_satire$type)
 final.hate_satire <- data.frame(x = hate_satire$X)
-final.hate_satire<- cbind(final.hate_satire,do.combine(hate_satire[,-1], actual.vs.predicted.hate_satire))
-```
-
-```{r algo_hate_state}
-actual.vs.predicted.hate_state = data.frame(actual = hate_state$type)
-final.hate_state <- data.frame(x = hate_state$X)
-final.hate_state <- cbind(final.hate_state,do.combine(hate_state[,-1], actual.vs.predicted.hate_state))
+final.hate_satire<- cbind(final.hate_satire,do.combine(hate_satire[,-1], actual.vs.predicted.hate_satire,"hate","satire"))
+final.hate_satire$actual <- as.character(final.hate_satire$actual)
+final.hate_satire$actual[which(final.hate_satire$actual %in% '0')] <- "hate"
+final.hate_satire$actual[which(final.hate_satire$actual %in% '1')] <- "satire"
+final.hate_satire$actual <- as.factor(final.hate_satire$actual)
 ```
 
 ```{r algo_junksci_satire}
 actual.vs.predicted.junksci_satire = data.frame(actual = junksci_satire$type)
 final.junksci_satire <- data.frame(x = junksci_satire$X)
-final.junksci_satire<- cbind(final.junksci_satire,do.combine(junksci_satire[,-1], actual.vs.predicted.junksci_satire))
-```
-
-```{r algo_junksci_state}
-actual.vs.predicted.junksci_state = data.frame(actual = junksci_state$type)
-final.junksci_state <- data.frame(x = junksci_state$X)
-final.junksci_state <- cbind(final.junksci_state,do.combine(junksci_state[,-1], actual.vs.predicted.junksci_state))
-```
-
-```{r algo_satire_state}
-actual.vs.predicted.satire_state = data.frame(actual =satire_state$type)
-final.hate_satire <- data.frame(x = satire_state$X)
-final.satire_state <- cbind(final.satire_state,do.combine(satire_state[,-1], actual.vs.predicted.satire_state))
+final.junksci_satire<- cbind(final.junksci_satire,do.combine(junksci_satire[,-1], actual.vs.predicted.junksci_satire,"junksci","satire"))
+final.junksci_satire$actual <- as.character(final.junksci_satire$actual)
+final.junksci_satire$actual[which(final.junksci_satire$actual %in% '0')] <- "junksci"
+final.junksci_satire$actual[which(final.junksci_satire$actual %in% '1')] <- "satire"
+final.junksci_satire$actual <- as.factor(final.junksci_satire$actual)
 ```
 
 ```{r }
