@@ -121,303 +121,84 @@ library(party)
 decisionTree_matr <- as.matrix(df_data)
 ```
 
-```{r 1Vs1_bait_satire}
-table(df_data$type)
-bait_satire <- df_data[which(df_data$type %in% c("bait", "satire")),]
-bait_satire$type <- as.character(bait_satire$type)
-table(bait_satire$type)
-bait_satire$type[which(bait_satire$type %in% "bait")] <- 0
-bait_satire$type[which(bait_satire$type %in% "satire")] <- 1
-bait_satire$type <- as.factor(bait_satire$type)
+```{r create_1vs1}
+create.df <- function(v1, v2){
+  
+df1 <- df_data[which(df_data$type %in% v1),]
+df2 <- df_data[which(df_data$type %in% v2),]
+
+diff <- nrow(df1) - nrow(df2)
+
+if(diff > 0){
+  print("in if")
+  df1 <- df1[-sample(1:nrow(df1), diff), ]
+} else {
+  print("in else")
+  df2 <- df2[-sample(1:nrow(df2), -(diff)), ]
+}
+
+df <- rbind(df1, df2)
+
+s1 <- nrow(df[which(df$type %in% v1),])
+s2 <- nrow(df[which(df$type %in% v2),])
+
+print(s1)
+print(s2)
+
+#print(s1,s2)
+df$type <- as.character(df$type)
+df$type[which(df$type %in% v1)] <- 0
+df$type[which(df$type %in% v2)] <- 1
+df$type <- as.factor(df$type)
+
+return(df)
+
+}
+
 ```
 
-```{r 1Vs1_bait_bias}
-table(df_data$type)
-bait_bias <- df_data[which(df_data$type %in% c("bait", "bias")),]
-bait_bias$type <- as.character(bait_bias$type)
-table(bait_bias$type)
-bait_bias$type[which(bait_bias$type %in% "bait")] <- 0
-bait_bias$type[which(bait_bias$type %in% "bias")] <- 1
-bait_bias$type <- as.factor(bait_bias$type)
-```
+```{r 1vs1_df}
+#bait vs all
+bait_bias <- create.df("bait","bias")
+bait_bs <- create.df("bait","bs")
+bait_conspiracy <- create.df("bait","conspiracy")
+bait_fake <- create.df("bait","fake")
+bait_hate <- create.df("bait","hate")
+bait_junksci <- create.df("bait","junksci")
+bait_satire <- create.df("bait","satire")
 
-```{r 1Vs1_bait_bs}
-table(df_data$type)
-bait_bs <- df_data[which(df_data$type %in% c("bait", "bs")),]
-bait_bs$type <- as.character(bait_bs$type)
-table(bait_bs$type)
-bait_bs$type[which(bait_bs$type %in% "bait")] <- 0
-bait_bs$type[which(bait_bs$type %in% "bs")] <- 1
-bait_bs$type <- as.factor(bait_bs$type)
-```
+#bias vs all
+bias_bs <- create.df("bias","bs")
+bias_conspiracy <- create.df("bias","conspiracy")
+bias_fake <- create.df("bias","fake")
+bias_hate <- create.df("bias","hate")
+bias_junksci <- create.df("bias","junksci")
+bias_satire <- create.df("bias","satire")
 
-```{r 1Vs1_bait_conspiracy}
-table(df_data$type)
-bait_conspiracy <- df_data[which(df_data$type %in% c("bait", "conspiracy")),]
-bait_conspiracy$type <- as.character(bait_conspiracy$type)
-table(bait_conspiracy$type)
-bait_conspiracy$type[which(bait_conspiracy$type %in% "bait")] <- 0
-bait_conspiracy$type[which(bait_conspiracy$type %in% "conspiracy")] <- 1
-bait_conspiracy$type <- as.factor(bait_conspiracy$type)
-```
+#bs vs all
+bs_conspiracy <- create.df("bs","conspiracy")
+bs_fake <- create.df("bs","fake")
+bs_hate <- create.df("bs","hate")
+bs_junksci <- create.df("bs","junksci")
+bs_satire <- create.df("bs","satire")
 
-```{r 1Vs1_bait_fake}
-table(df_data$type)
-bait_fake <- df_data[which(df_data$type %in% c("bait", "fake")),]
-bait_fake$type <- as.character(bait_fake$type)
-table(bait_fake$type)
-bait_fake$type[which(bait_fake$type %in% "bait")] <- 0
-bait_fake$type[which(bait_fake$type %in% "fake")] <- 1
-bait_fake$type <- as.factor(bait_fake$type)
-```
+#conspiracy vs all
+conspiracy_fake <- create.df("conspiracy","fake")
+conspiracy_hate <- create.df("conspiracy","hate")
+conspiracy_junksci <- create.df("conspiracy","junksci")
+conspiracy_satire <- create.df("conspiracy","satire")
 
-```{r 1Vs1_bait_hate}
-table(df_data$type)
-bait_hate <- df_data[which(df_data$type %in% c("bait", "hate")),]
-bait_hate$type <- as.character(bait_hate$type)
-table(bait_hate$type)
-bait_hate$type[which(bait_hate$type %in% "bait")] <- 0
-bait_hate$type[which(bait_hate$type %in% "hate")] <- 1
-bait_hate$type <- as.factor(bait_hate$type)
-```
+#fake vs all
+fake_hate <- create.df("fake","hate")
+fake_junksci <- create.df("fake","junksci")
+fake_satire <- create.df("fake","satire")
 
-```{r 1Vs1_bait_junksci}
-table(df_data$type)
-bait_junksci <- df_data[which(df_data$type %in% c("bait", "junksci")),]
-bait_junksci$type <- as.character(bait_junksci$type)
-table(bait_junksci$type)
-bait_junksci$type[which(bait_junksci$type %in% "bait")] <- 0
-bait_junksci$type[which(bait_junksci$type %in% "junksci")] <- 1
-bait_junksci$type <- as.factor(bait_junksci$type)
-```
+#hate vs all
+hate_junksci <- create.df("hate","junksci")
+hate_satire <- create.df("hate","satire")
 
-```{r 1Vs1_bias_bs}
-table(df_data$type)
-bias_bs <- df_data[which(df_data$type %in% c("bias", "bs")),]
-bias_bs$type <- as.character(bias_bs$type)
-table(bias_bs$type)
-bias_bs$type[which(bias_bs$type %in% "bias")] <- 0
-bias_bs$type[which(bias_bs$type %in% "bs")] <- 1
-bias_bs$type <- as.factor(bias_bs$type)
-```
-
-```{r 1Vs1_bias_conspiracy}
-table(df_data$type)
-bias_conspiracy <- df_data[which(df_data$type %in% c("bias", "conspiracy")),]
-bias_conspiracy$type <- as.character(bias_conspiracy$type)
-table(bias_conspiracy$type)
-bias_conspiracy$type[which(bias_conspiracy$type %in% "bias")] <- 0
-bias_conspiracy$type[which(bias_conspiracy$type %in% "conspiracy")] <- 1
-bias_conspiracy$type <- as.factor(bias_conspiracy$type)
-```
-
-```{r 1Vs1_bias_fake}
-table(df_data$type)
-bias_fake <- df_data[which(df_data$type %in% c("bias", "fake")),]
-bias_fake$type <- as.character(bias_fake$type)
-table(bias_fake$type)
-bias_fake$type[which(bias_fake$type %in% "bias")] <- 0
-bias_fake$type[which(bias_fake$type %in% "fake")] <- 1
-bias_fake$type <- as.factor(bias_fake$type)
-```
-
-```{r 1Vs1_bias_hate}
-table(df_data$type)
-bias_hate <- df_data[which(df_data$type %in% c("bias", "hate")),]
-bias_hate$type <- as.character(bias_hate$type)
-table(bias_hate$type)
-bias_hate$type[which(bias_hate$type %in% "bias")] <- 0
-bias_hate$type[which(bias_hate$type %in% "hate")] <- 1
-bias_hate$type <- as.factor(bias_hate$type)
-table(bias_hate$type)
-```
-
-```{r 1Vs1_bias_junksci}
-table(df_data$type)
-bias_junksci <- df_data[which(df_data$type %in% c("bias", "junksci")),]
-bias_junksci$type <- as.character(bias_junksci$type)
-table(bias_junksci$type)
-bias_junksci$type[which(bias_junksci$type %in% "bias")] <- 0
-bias_junksci$type[which(bias_junksci$type %in% "junksci")] <- 1
-bias_junksci$type <- as.factor(bias_junksci$type)
-table(bias_junksci$type)
-```
-
-```{r 1Vs1_bias_satire}
-table(df_data$type)
-bias_satire <- df_data[which(df_data$type %in% c("bias", "satire")),]
-bias_satire$type <- as.character(bias_satire$type)
-table(bias_satire$type)
-bias_satire$type[which(bias_satire$type %in% "bias")] <- 0
-bias_satire$type[which(bias_satire$type %in% "satire")] <- 1
-bias_satire$type <- as.factor(bias_satire$type)
-table(bias_satire$type)
-```
-
-```{r 1Vs1_bs_conspiracy}
-table(df_data$type)
-bs_conspiracy <- df_data[which(df_data$type %in% c("bs", "conspiracy")),]
-bs_conspiracy$type <- as.character(bs_conspiracy$type)
-table(bs_conspiracy$type)
-bs_conspiracy$type[which(bs_conspiracy$type %in% "bs")] <- 0
-bs_conspiracy$type[which(bs_conspiracy$type %in% "conspiracy")] <- 1
-bs_conspiracy$type <- as.factor(bs_conspiracy$type)
-table(bs_conspiracy$type)
-```
-
-```{r 1Vs1_bs_fake}
-table(df_data$type)
-bs_fake <- df_data[which(df_data$type %in% c("bs", "fake")),]
-bs_fake$type <- as.character(bs_fake$type)
-table(bs_fake$type)
-bs_fake$type[which(bs_fake$type %in% "bs")] <- 0
-bs_fake$type[which(bs_fake$type %in% "fake")] <- 1
-bs_fake$type <- as.factor(bs_fake$type)
-table(bs_fake$type)
-```
-
-```{r 1Vs1_bs_hate}
-table(df_data$type)
-bs_hate <- df_data[which(df_data$type %in% c("bs", "hate")),]
-bs_hate$type <- as.character(bs_hate$type)
-table(bs_hate$type)
-bs_hate$type[which(bs_hate$type %in% "bs")] <- 0
-bs_hate$type[which(bs_hate$type %in% "hate")] <- 1
-bs_hate$type <- as.factor(bs_hate$type)
-table(bs_hate$type)
-```
-
-```{r 1Vs1_bs_junksci}
-table(df_data$type)
-bs_junksci <- df_data[which(df_data$type %in% c("bs", "junksci")),]
-bs_junksci$type <- as.character(bs_junksci$type)
-table(bs_junksci$type)
-bs_junksci$type[which(bs_junksci$type %in% "bs")] <- 0
-bs_junksci$type[which(bs_junksci$type %in% "junksci")] <- 1
-bs_junksci$type <- as.factor(bs_junksci$type)
-table(bs_junksci$type)
-```
-
-```{r 1Vs1_bs_satire}
-table(df_data$type)
-bs_satire <- df_data[which(df_data$type %in% c("bs", "satire")),]
-bs_satire$type <- as.character(bs_satire$type)
-table(bs_satire$type)
-bs_satire$type[which(bs_satire$type %in% "bs")] <- 0
-bs_satire$type[which(bs_satire$type %in% "satire")] <- 1
-bs_satire$type <- as.factor(bs_satire$type)
-table(bs_satire$type)
-```
-
-```{r 1Vs1_conspiracy_fake}
-table(df_data$type)
-conspiracy_fake <- df_data[which(df_data$type %in% c("fake", "conspiracy")),]
-conspiracy_fake$type <- as.character(conspiracy_fake$type)
-table(conspiracy_fake$type)
-conspiracy_fake$type[which(conspiracy_fake$type %in% "conspiracy")] <- 0
-conspiracy_fake$type[which(conspiracy_fake$type %in% "fake")] <- 1
-conspiracy_fake$type <- as.factor(conspiracy_fake$type)
-table(conspiracy_fake$type)
-```
-
-```{r 1Vs1_conspiracy_hate}
-table(df_data$type)
-conspiracy_hate <- df_data[which(df_data$type %in% c("conspiracy", "hate")),]
-conspiracy_hate$type <- as.character(conspiracy_hate$type)
-table(conspiracy_hate$type)
-conspiracy_hate$type[which(conspiracy_hate$type %in% "conspiracy")] <- 0
-conspiracy_hate$type[which(conspiracy_hate$type %in% "hate")] <- 1
-conspiracy_hate$type <- as.factor(conspiracy_hate$type)
-table(conspiracy_hate$type)
-```
-
-```{r 1Vs1_conspiracy_junksci}
-table(df_data$type)
-conspiracy_junksci <- df_data[which(df_data$type %in% c("junksci", "conspiracy")),]
-conspiracy_junksci$type <- as.character(conspiracy_junksci$type)
-table(conspiracy_junksci$type)
-conspiracy_junksci$type[which(conspiracy_junksci$type %in% "conspiracy")] <- 0
-conspiracy_junksci$type[which(conspiracy_junksci$type %in% "junksci")] <- 1
-conspiracy_junksci$type <- as.factor(conspiracy_junksci$type)
-table(conspiracy_junksci$type)
-```
-
-```{r 1Vs1_conspiracy_satire}
-table(df_data$type)
-conspiracy_satire <- df_data[which(df_data$type %in% c("satire", "conspiracy")),]
-conspiracy_satire$type <- as.character(conspiracy_satire$type)
-table(conspiracy_satire$type)
-conspiracy_satire$type[which(conspiracy_satire$type %in% "conspiracy")] <- 0
-conspiracy_satire$type[which(conspiracy_satire$type %in% "fake")] <- 1
-conspiracy_satire$type <- as.factor(conspiracy_satire$type)
-table(conspiracy_satire$type)
-```
-
-```{r 1Vs1_fake_hate}
-table(df_data$type)
-fake_hate <- df_data[which(df_data$type %in% c("fake", "hate")),]
-fake_hate$type <- as.character(fake_hate$type)
-table(fake_hate$type)
-fake_hate$type[which(fake_hate$type %in% "fake")] <- 0
-fake_hate$type[which(fake_hate$type %in% "hate")] <- 1
-fake_hate$type <- as.factor(fake_hate$type)
-table(fake_hate$type)
-```
-
-```{r 1Vs1_fake_junksci}
-table(df_data$type)
-fake_junksci <- df_data[which(df_data$type %in% c("fake", "junksci")),]
-fake_junksci$type <- as.character(fake_junksci$type)
-table(fake_junksci$type)
-fake_junksci$type[which(fake_junksci$type %in% "fake")] <- 0
-fake_junksci$type[which(fake_junksci$type %in% "junksci")] <- 1
-fake_junksci$type <- as.factor(fake_junksci$type)
-table(fake_junksci$type)
-```
-
-```{r 1Vs1_fake_satire}
-table(df_data$type)
-fake_satire <- df_data[which(df_data$type %in% c("fake", "satire")),]
-fake_satire$type <- as.character(fake_satire$type)
-table(fake_satire$type)
-fake_satire$type[which(fake_satire$type %in% "fake")] <- 0
-fake_satire$type[which(fake_satire$type %in% "satire")] <- 1
-fake_satire$type <- as.factor(fake_satire$type)
-table(fake_satire$type)
-```
-
-
-```{r 1Vs1_hate_junksci}
-table(df_data$type)
-hate_junksci <- df_data[which(df_data$type %in% c("hate", "junksci")),]
-hate_junksci$type <- as.character(hate_junksci$type)
-table(hate_junksci$type)
-hate_junksci$type[which(hate_junksci$type %in% "hate")] <- 0
-hate_junksci$type[which(hate_junksci$type %in% "junksci")] <- 1
-hate_junksci$type <- as.factor(hate_junksci$type)
-table(hate_junksci$type)
-```
-
-```{r 1Vs1_hate_satire}
-table(df_data$type)
-hate_satire <- df_data[which(df_data$type %in% c("hate", "satire")),]
-hate_satire$type <- as.character(hate_satire$type)
-table(hate_satire$type)
-hate_satire$type[which(hate_satire$type %in% "hate")] <- 0
-hate_satire$type[which(hate_satire$type %in% "satire")] <- 1
-hate_satire$type <- as.factor(hate_satire$type)
-table(hate_satire$type)
-```
-
-```{r 1Vs1_junksci_satire}
-table(df_data$type)
-junksci_satire <- df_data[which(df_data$type %in% c("junksci", "satire")),]
-junksci_satire$type <- as.character(junksci_satire$type)
-table(junksci_satire$type)
-junksci_satire$type[which(junksci_satire$type %in% "junksci")] <- 0
-junksci_satire$type[which(junksci_satire$type %in% "satire")] <- 1
-junksci_satire$type <- as.factor(junksci_satire$type)
-table(junksci_satire$type)
+#junksci vs all
+junksci_satire <- create.df("junksci","satire")
 ```
 
 ```{r Yuru_style}
@@ -656,9 +437,9 @@ do.combine <- function(df, actual.vs.predicted,var1,var2){
   
   actual.vs.predicted <- as.data.frame(actual.vs.predicted)
   
-  final.prediction <- apply(actual.vs.predicted[,2:length(actual.vs.predicted)],1,mfv)
-  final.prediction <- as.data.frame(final.prediction)
-  actual.vs.predicted <- cbind(actual.vs.predicted, final.prediction)
+  #final.prediction <- apply(actual.vs.predicted[,2:length(actual.vs.predicted)],1,mfv)
+  #final.prediction <- as.data.frame(final.prediction)
+  #actual.vs.predicted <- cbind(actual.vs.predicted, final.prediction)
   
   for(i in 1:length(actual.vs.predicted))
     actual.vs.predicted[,i] <- as.factor(actual.vs.predicted[,i])
@@ -971,6 +752,57 @@ final.junksci_satire$actual <- as.factor(final.junksci_satire$actual)
 ############ Taking too much time to execute #####################
 ##################################################################
 
+```
+
+```{r merge}
+
+MyMerge <- function(x, y){
+df <- merge(x, y, by= colnames(x), all = T)
+return(df)
+}
+
+  dat <- Reduce(MyMerge, 
+        list(final.bait_bias, final.bait_bs, final.bait_conspiracy, final.bait_fake, final.bait_hate, final.bait_junksci, final.bait_satire,
+             final.bias_bs, final.bias_conspiracy, final.bias_fake, final.bias_hate, final.bias_junksci, final.bias_satire,
+             final.bs_conspiracy, final.bs_fake, final.bs_hate, final.bs_junksci, final.bs_satire, 
+             final.conspiracy_fake, final.conspiracy_hate, final.conspiracy_junksci, final.conspiracy_satire, 
+             final.fake_hate, final.fake_junksci, final.fake_satire, 
+             final.hate_junksci, final.hate_satire, 
+             final.junksci_satire))
+  
+  dat$x <- as.character(dat$x)
+  dat$actual <- as.character(dat$actual)
+  dat$lr <- as.character(dat$lr)
+  dat$knn1 <- as.character(dat$knn1)
+  dat$knn3 <- as.character(dat$knn3)
+  dat$nb <- as.character(dat$nb)
+  dat$dtree <- as.character(dat$dtree)
+  dat$dtreeprune <- as.character(dat$dtreeprune)
+  dat$svm <- as.character(dat$svm)
+  
+  output <- data.frame(x = character(),
+                       actual = character(),
+                       lr = character(),
+                       knn1 = character(),
+                       knn3 = character(),
+                       nb = character(),
+                       dtree = character(),
+                       dtreeprune = character(),
+                       svm = character())
+ 
+  for (i in 1:max(dat$x)){
+    test <- dat[which(dat$x == i),]
+    mode <- apply(test[1:nrow(test),],2,mfv)
+    for (j in 2:9){
+      if (length(mode[[j]])>1){
+        mode[[j]] = mode[[j]][1]
+      }   
+    }
+    mode <- unlist(mode)
+    output <- rbind(output,mode)
+  }
+ 
+}
 ```
 
 ```{r Evaluation_Implementation}
