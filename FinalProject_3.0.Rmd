@@ -212,6 +212,7 @@ library(MASS) # for the example dataset
 library(plyr) # for recoding data
 library(ROCR)
 library(modeest) #for finding mode
+library(xgboost)
 
 do.classification <- function(train.set, test.set, cl.name) {
   ## note: to plot ROC later, we want the raw probabilities,
@@ -343,6 +344,13 @@ do.classification <- function(train.set, test.set, cl.name) {
            prob = predict(model, newdata=test.set, type='probs')
            prob = prob[,2]/rowSums(prob)
            prob
+         },
+         xg = {
+           y <- train.set$y
+           model = xgboost(data = data.matrix(train.set), label = y, nrounds = 25)
+           prob = predict(model, newdata=data.matrix(test.set), type='probs')
+           #prob = prob[,2]/rowSums(prob)
+           prob
          }
   ) 
 }
@@ -405,6 +413,7 @@ get.predicted <- function(result,var1,var2){
 do.combine <- function(df, actual.vs.predicted,var1,var2){
 
   model.mat <- model.mat.function(df)
+  
   result_lr <- k.fold.cv(model.mat,'lr', get.performance = T)
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_lr,var1,var2))
   colnames(actual.vs.predicted) <- c("actual", "lr")
@@ -436,6 +445,14 @@ do.combine <- function(df, actual.vs.predicted,var1,var2){
   result_svm <- k.fold.cv(model.mat,'svm')
   actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svm,var1,var2))
   colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune', 'svm')
+  
+  result_xg <- k.fold.cv(model.mat,'xg')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_xg,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune', 'svm', 'xg')
+  
+  result_ada <- k.fold.cv(model.mat,'ada')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_ada,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune', 'svm', 'xg', 'ada')
   
   actual.vs.predicted <- as.data.frame(actual.vs.predicted)
   
