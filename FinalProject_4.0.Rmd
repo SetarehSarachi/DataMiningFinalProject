@@ -1,0 +1,766 @@
+---
+title: "FinalProject_2.0"
+author: "Group 2"
+date: "April 8, 2017"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+#processed_fake<-read.csv("/Users/setaresarachi/Desktop/INFSCI 2160/DataMiningFinalProject/preprocessed_fake.csv")
+processed_fake <- read.csv("preprocessed_fake.csv")
+#Removing uuid and default 'x' column
+processed_fake<- processed_fake[,c(-1,-3)]
+```
+
+```{r PreProcessing}
+#changing factors to characters
+
+processed_fake$author <- as.character(processed_fake$author)
+processed_fake$title <- as.character(processed_fake$title)
+processed_fake$crawled <- as.character(processed_fake$crawled)
+processed_fake$site_url <- as.character(processed_fake$site_url)
+
+#setting domain ranks with NAs to 0
+processed_fake$domain_rank[which(is.na(processed_fake$domain_rank))] <- 0
+
+#taking required columns
+df_data <- processed_fake[,c(2,5,6,7,8,9,10,11,12,13,14,15)]
+#df_data <- df_data[,c(-1,-2)]
+
+#converting integer to numeric
+df_data$domain_rank <- as.numeric(df_data$domain_rank)
+df_data$replies_count <- as.numeric((df_data$replies_count))
+df_data$participants_count <- as.numeric((df_data$participants_count))
+df_data$comments <- as.numeric((df_data$comments))
+df_data$likes<- as.numeric((df_data$likes))
+df_data$shares <- as.numeric((df_data$shares))
+  
+#Changing rumor to bs
+df_data$type[which(df_data$type %in% c('state','fake','rumor'))] <- 'fake'
+x <- c(1:nrow(df_data))
+df_data <- cbind(x, df_data)
+#removing the level rumor
+df_data$type <- as.factor(as.character(df_data$type))
+table(df_data$type)
+```
+
+```{r Summary_and_Statistical_Analysis}
+domain_rank.sum <- c(summary(processed_fake$domain_rank), sd(processed_fake$domain_rank))
+spam_score.sum<-c(summary(processed_fake$spam_score), sd(processed_fake$spam_score))
+replies_count.sum<-c(summary(processed_fake$replies_count), sd(processed_fake$replies_count))
+participants_count.sum<-c(summary(processed_fake$participants_count), sd(processed_fake$participants_count))
+likes.sum<-c(summary(processed_fake$likes), sd(processed_fake$likes))
+comments.sum<-c(summary(processed_fake$comments), sd(processed_fake$comments))
+shares.sum<-c(summary(processed_fake$shares), sd(processed_fake$shares))
+
+result = cbind(domain_rank.sum, spam_score.sum, replies_count.sum, participants_count.sum, likes.sum, comments.sum, shares.sum)
+
+result = as.data.frame(result)
+rownames(result)[7] <- c("sd")
+colnames(result) <- c("Domain Rank","Spam Score","Replies Count","Participants Count", "Likes","Comments","Shares")
+library(knitr)
+kable(result, caption = 'Table 1: Summary of attributes')
+
+```
+
+```{r plot_of_frequency_of_categorical_vars}
+library(ggplot2)
+#Plot of frequency of "type"
+ggplot(processed_fake , aes(x = processed_fake$type, fill = processed_fake$type))+ 
+
+  geom_bar(alpha = 0.8) +
+  ggtitle("Histogram Plot:  Type") + 
+
+  labs(x = "Type", y = "Counts") + 
+  guides(fill=guide_legend(title="Type")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Plot of frequency of "countries"
+ggplot(processed_fake , aes(x = processed_fake$country, fill = processed_fake$country))+ 
+
+  geom_bar(alpha = 0.63) +
+  ggtitle("Histogram Plot:  Country") + 
+  labs(x = "Country", y = "Counts") + 
+  guides(fill=guide_legend(title="Country")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Plot of distribution of types for each country
+ggplot(processed_fake , aes(x = processed_fake$country, fill = processed_fake$type))+ 
+  geom_bar(alpha = 0.63) +
+  ggtitle("Histogram Plot:  Distribution of Type for each Country") + 
+  labs(x = "Country", y = "Type Distribution") + 
+  guides(fill=guide_legend(title="Type")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Number of Participants for each Type
+participants.count_type <- aggregate(participants_count~type,processed_fake,sum)
+ggplot(participants.count_type , aes(x = type, y = participants_count, fill= participants_count))+ 
+  geom_bar(alpha = 0.7,stat = "Identity") +
+  ggtitle("Histogram Plot: Number of Participants for each Type") + 
+  labs(x = "Type", y = "Counts") + 
+  guides(fill=guide_legend(title=" Count")) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_fill_continuous(low="red",high="yellow", limits=c(0,9000))
+```
+  
+```{r MultinomReg}  
+library(nnet)
+model_logit<-multinom(formula= type ~.,data = df_data)
+```
+
+```{r RandomForest}
+library(randomForest)
+rf_model <- randomForest(formula = type ~., data = df_data,ntree=100)
+importance(rf_model)
+str(df_data)
+```
+
+```{r kFoldRandomForest}
+library(randomForest)
+library(MASS) 
+library(tree)
+library(party)
+decisionTree_matr <- as.matrix(df_data)
+```
+
+```{r create_1vs1}
+create.df <- function(v1, v2){
+  
+df1 <- df_data[which(df_data$type %in% v1),]
+df2 <- df_data[which(df_data$type %in% v2),]
+
+diff <- nrow(df1) - nrow(df2)
+
+if(diff > 0){
+  print("in if")
+  df1 <- df1[-sample(1:nrow(df1), diff), ]
+} else {
+  print("in else")
+  df2 <- df2[-sample(1:nrow(df2), -(diff)), ]
+}
+
+df <- rbind(df1, df2)
+
+s1 <- nrow(df[which(df$type %in% v1),])
+s2 <- nrow(df[which(df$type %in% v2),])
+
+print(s1)
+print(s2)
+
+#print(s1,s2)
+df$type <- as.character(df$type)
+df$type[which(df$type %in% v1)] <- 0
+df$type[which(df$type %in% v2)] <- 1
+df$type <- as.factor(df$type)
+
+return(df)
+
+}
+
+```
+
+```{r 1vs1_df}
+#bait vs all
+bait_bias <- create.df("bait","bias")
+bait_bs <- create.df("bait","bs")
+bait_conspiracy <- create.df("bait","conspiracy")
+bait_fake <- create.df("bait","fake")
+bait_hate <- create.df("bait","hate")
+bait_junksci <- create.df("bait","junksci")
+bait_satire <- create.df("bait","satire")
+
+#bias vs all
+bias_bs <- create.df("bias","bs")
+bias_conspiracy <- create.df("bias","conspiracy")
+bias_fake <- create.df("bias","fake")
+bias_hate <- create.df("bias","hate")
+bias_junksci <- create.df("bias","junksci")
+bias_satire <- create.df("bias","satire")
+
+#bs vs all
+bs_conspiracy <- create.df("bs","conspiracy")
+bs_fake <- create.df("bs","fake")
+bs_hate <- create.df("bs","hate")
+bs_junksci <- create.df("bs","junksci")
+bs_satire <- create.df("bs","satire")
+
+#conspiracy vs all
+conspiracy_fake <- create.df("conspiracy","fake")
+conspiracy_hate <- create.df("conspiracy","hate")
+conspiracy_junksci <- create.df("conspiracy","junksci")
+conspiracy_satire <- create.df("conspiracy","satire")
+
+#fake vs all
+fake_hate <- create.df("fake","hate")
+fake_junksci <- create.df("fake","junksci")
+fake_satire <- create.df("fake","satire")
+
+#hate vs all
+hate_junksci <- create.df("hate","junksci")
+hate_satire <- create.df("hate","satire")
+
+#junksci vs all
+junksci_satire <- create.df("junksci","satire")
+```
+
+```{r create_1vsAll}
+create.all.df <- function(v1){
+  
+  #v1 <- "bait"
+  
+#idx <- which(df_data$type %in% v1)
+  
+df1 <- df_data[which(df_data$type %in% v1),]
+df2 <- df_data[-which(df_data$type %in% v1),]
+
+diff <- nrow(df1) - nrow(df2)
+
+if(diff > 0){
+  #print("in if")
+  df1 <- df1[-sample(1:nrow(df1), diff), ]
+} else {
+  #print("in else")
+  df2 <- df2[-sample(1:nrow(df2), -(diff)), ]
+}
+
+df <- rbind(df1, df2)
+
+df$type <- as.character(df$type)
+df$type[which(df$type == v1)] <- 1
+df$type[which(df$type != 1)] <- 0
+
+#df$type[idx] <- 1
+#df$type[!idx] <- 0
+
+df$type <- as.factor(df$type)
+
+#table(df$type)
+
+return(df)
+
+}
+```
+
+```{r 1vsAll_df}
+
+bait_all <- create.all.df("bait")
+bias_all <- create.all.df("bias")
+bs_all <- create.all.df("bs")
+conspiracy_all <- create.all.df("conspiracy")
+fake_all <- create.all.df("fake")
+hate_all <- create.all.df("hate")
+junksci_all <- create.all.df("junksci")
+satire_all <- create.all.df("satire")
+
+```
+
+```{r Yuru_style}
+library(e1071) # for NB and SVM
+library(rpart) # for decision tree
+library(ada) # for adaboost
+library(class)
+library(MASS) # for the example dataset 
+library(plyr) # for recoding data
+library(ROCR)
+library(modeest) #for finding mode
+library(xgboost)
+
+do.classification <- function(train.set, test.set, cl.name) {
+  ## note: to plot ROC later, we want the raw probabilities,
+  ## not binary decisions
+  switch(cl.name, 
+         knn1 = { # here we test k=1; you should evaluate different k's
+           prob = knn(train.set[,-1], test.set[,-1], cl=train.set[,1], k = 1, prob=T)
+           attr(prob,"prob")[prob==0] = 1-attr(prob,"prob")[prob==0] #modified
+           prob = attr(prob,"prob")
+           prob
+         },
+         knn3 = { # here we test k=3; you should evaluate different k's
+           prob = knn(train.set[,-1], test.set[,-1], cl=train.set[,1], k = 3, prob=T)
+           attr(prob,"prob")[prob==0] = 1-attr(prob,"prob")[prob==0] #modified
+           prob = attr(prob,"prob")
+           prob
+         },
+         knn5 = { # here we test k=5; you should evaluate different k's
+           prob = knn(train.set[,-1], test.set[,-1], cl=train.set[,1], k = 5, prob=T)
+           attr(prob,"prob")[prob==0] = 1-attr(prob,"prob")[prob==0] #modified
+           prob = attr(prob,"prob")
+           prob
+         },
+         lr = { # logistic regression
+           model = glm(y~., family=binomial, data=train.set)
+          
+           prob = predict(model, newdata=test.set, type="response") 
+           prob
+         },
+         nb = {
+           model = naiveBayes(y~., data=train.set)
+           prob = predict(model, newdata=test.set, type="raw") 
+           prob = prob[,2]/rowSums(prob) # renormalize the prob.
+           prob
+         },
+         dtree = {
+           model = rpart(y~., data=train.set)
+                     
+          prob = predict(model, newdata=test.set)
+           
+           if (0) { # here we use the default tree, 
+             ## you should evaluate different size of tree
+             ## prune the tree 
+             pfit<- prune(model, cp=model$cptable[which.min(model$cptable[,"xerror"]),"CP"])
+             prob = predict(pfit, newdata=test.set)
+             ## plot the pruned tree 
+             #plot(pfit, uniform=TRUE,main="Pruned Classification Tree")
+             #text(pfit, use.n=TRUE, all=TRUE, cex=.8)             
+           }
+           prob = prob[,2]/rowSums(prob) # renormalize the prob.
+           #prob <- prob/sum(prob)
+           prob
+         },
+         dtreeprune = {
+           model = rpart(y~., data=train.set)
+                  
+           prob = predict(model, newdata=test.set)
+           
+           if (1) { # here we prune the tree, 
+             ## you should evaluate different size of tree
+             ## prune the tree 
+             pfit<- prune(model, cp=model$cptable[which.min(model$cptable[,"xerror"]),"CP"])
+             prob = predict(pfit, newdata=test.set)
+             ## plot the pruned tree 
+             #plot(pfit, uniform=TRUE,main="Pruned Classification Tree")
+             #text(pfit, use.n=TRUE, all=TRUE, cex=.8)             
+           }
+           prob = prob[,2]/rowSums(prob) # renormalize the prob.
+           #prob <- prob/sum(prob)
+           prob
+         },
+         svm = {
+           model = svm(y~., data=train.set, probability=TRUE)
+           if (0) { # fine-tune the model with different kernel and parameters
+             ## evaluate the range of gamma parameter between 0.000001 and 0.1
+             ## and cost parameter from 0.1 until 10
+             tuned <- tune.svm(y~., data = train.set, 
+                               kernel="radial", 
+                               gamma = 10^(-6:-1), cost = 10^(-1:1))
+             gamma = tuned[['best.parameters']]$gamma
+             cost = tuned[['best.parameters']]$cost
+             model = svm(y~., data = train.set, probability=TRUE, 
+                         kernel="radial", gamma=gamma, cost=cost)                        
+           }
+           prob = predict(model, newdata=test.set, probability=TRUE)
+           prob = attr(prob,"probabilities")
+           prob = prob[,which(colnames(prob)==1)]/rowSums(prob)
+           prob
+         },
+         svmsig = {
+           model = svm(y~., data=train.set, probability=TRUE)
+           if (1) { # fine-tune the model with kernel "sigmoid"
+             ## evaluate the range of gamma parameter between 0.000001 and 0.1
+             ## and cost parameter from 0.1 until 10
+             tuned <- tune.svm(y~., data = train.set, 
+                               kernel="sigmoid", 
+                               gamma = 10^(-6:-1), cost = 10^(-1:1))
+             gamma = tuned[['best.parameters']]$gamma
+             cost = tuned[['best.parameters']]$cost
+             model = svm(y~., data = train.set, probability=TRUE, 
+                         kernel="radial", gamma=gamma, cost=cost)                        
+           }
+           prob = predict(model, newdata=test.set, probability=TRUE)
+           prob = attr(prob,"probabilities")
+           prob = prob[,which(colnames(prob)==1)]/rowSums(prob)
+           prob
+         },
+         svmlin= {
+           model = svm(y~., data=train.set, probability=T)
+           if (1) { # fine-tune the model with kernel "linear"
+             ## evaluate the range of gamma parameter between 0.000001 and 0.1
+             ## and cost parameter from 0.1 until 10
+             tuned <- tune.svm(y~., data = train.set, 
+                               kernel="linear", 
+                               gamma = 10^(-4:-1), cost = 10^(-2:1))
+             #print(summary(tuned))
+             gamma = tuned[['best.parameters']]$gamma
+             cost = tuned[['best.parameters']]$cost
+             model = svm(y~., data = train.set, probability=T, 
+                         kernel="linear", gamma=gamma, cost=cost)                        
+           }
+           prob = predict(model, newdata=test.set, probability=T, type="raw")
+           prob = attr(prob,"probabilities")
+           prob = prob[,which(colnames(prob)==1)]/rowSums(prob)
+           prob
+         },
+         ada = {
+           model = ada(y~., data = train.set)
+           prob = predict(model, newdata=test.set, type='probs')
+           prob = prob[,2]/rowSums(prob)
+           prob
+         },
+         xg = {
+           y <- train.set$y
+           model = xgboost(data = data.matrix(train.set), label = y, nrounds = 25)
+           prob = predict(model, newdata=data.matrix(test.set), type='probs')
+           #prob = prob[,2]/rowSums(prob)
+           prob
+         }
+  ) 
+}
+
+k.fold.cv <- function(dataset, cl.name, k.fold=10, prob.cutoff=0.5, get.performance=F) {
+  ## default: 10-fold CV, cut-off 0.5
+
+  n.obs <- nrow(dataset) # no. of observations 
+  s = sample(n.obs)
+  errors = dim(k.fold)
+  probs = NULL
+  actuals = NULL
+  for (k in 1:k.fold) {
+    test.idx = which(s %% k.fold == (k-1) ) # use modular operator
+    train.set = dataset[-test.idx,]
+    test.set = dataset[test.idx,]
+    prob = do.classification(train.set, test.set, cl.name)
+    predicted = as.numeric(prob > prob.cutoff)
+    actual = test.set$y
+    confusion.matrix = table(actual,factor(predicted,levels=c(0,1)))
+    confusion.matrix
+    error = (confusion.matrix[1,2]+confusion.matrix[2,1]) / nrow(test.set)  
+    errors[k] = error
+    cat('\t\terror=',error,'\n')
+    probs = c(probs,prob)
+    actuals = c(actuals,actual)
+    ## you may compute other measures and store them in arrays
+  }
+  avg.error = mean(errors)
+  cat(k.fold,'-fold CV results:','avg error=',avg.error,'\n')
+  
+  ## plot ROC
+  result = data.frame(probs,actuals)
+  pred = prediction(result$probs,result$actuals)
+  
+  return(pred)
+
+}
+
+normalize <- function(x) {
+return ((x - min(x)) / (max(x) - min(x))) }
+
+model.mat.function <- function(data_combination){
+model.mat<-model.matrix(data_combination$type~.,data=data_combination)[,-1]
+model.mat[1:3, ]
+model.mat <- as.data.frame(model.mat) #converting into data frame
+model.mat$y <- data_combination$type 
+return(model.mat)
+}
+
+get.predicted <- function(result,var1,var2){
+  predicted.labels <- data.frame(predicted = result@labels)
+  colnames(predicted.labels) <- "algo"
+  predicted.labels$algo <- as.numeric(predicted.labels$algo)
+  predicted.labels$algo[which(predicted.labels$algo == 1)] <- var1
+  predicted.labels$algo[which(predicted.labels$algo == 2)] <- var2
+  return(predicted.labels$algo)
+}
+
+do.combine <- function(df, actual.vs.predicted,var1,var2){
+
+  #df <- bait_satire[,-1]
+  #actual.vs.predicted <- actual.vs.predicted.bait_satire
+  #var1 <- "bait"
+  #var2<- "satire"
+  model.mat <- model.mat.function(df)
+  
+  result_lr <- k.fold.cv(model.mat,'lr', get.performance = T)
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_lr,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr")
+
+  result_knn1 <- k.fold.cv(model.mat,'knn1')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn1,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1")
+
+  result_knn3 <- k.fold.cv(model.mat,'knn3')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn3,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3')
+
+  #result_knn5 <- k.fold.cv(model.mat,'knn5')
+  #actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_knn5,var1,var2))
+  #colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'knn5')
+
+  result_nb <- k.fold.cv(model.mat,'nb')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_nb,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb')
+
+  result_dtree <- k.fold.cv(model.mat,'dtree')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtree,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree')
+
+  result_dtreeprune <- k.fold.cv(model.mat,'dtreeprune')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_dtreeprune,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune')
+
+  result_svm <- k.fold.cv(model.mat,'svm')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_svm,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune', 'svm')
+  
+  result_xg <- k.fold.cv(model.mat,'xg')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_xg,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune', 'svm', 'xg')
+  
+  result_ada <- k.fold.cv(model.mat,'ada')
+  actual.vs.predicted <- cbind(actual.vs.predicted, get.predicted(result_ada,var1,var2))
+  colnames(actual.vs.predicted) <- c("actual", "lr", "knn1", 'knn3', 'nb', 'dtree', 'dtreeprune', 'svm', 'xg', 'ada')
+  
+  actual.vs.predicted <- as.data.frame(actual.vs.predicted)
+  
+  #final.prediction <- apply(actual.vs.predicted[,2:length(actual.vs.predicted)],1,mfv)
+  #final.prediction <- as.data.frame(final.prediction)
+  #actual.vs.predicted <- cbind(actual.vs.predicted, final.prediction)
+  
+  for(i in 1:length(actual.vs.predicted))
+    actual.vs.predicted[,i] <- as.factor(actual.vs.predicted[,i])
+  
+ return(actual.vs.predicted)
+}
+
+```
+
+```{r binary}
+do.binary <- function(df, var1, var2 = "", flag){
+  
+  if(flag == "all")
+    var2 <- paste("not", var1, sep = "_")
+  
+  resultData <- data.frame(actual = df$type)
+  finalResult <- data.frame(x = df$x)
+  finalResult <- cbind(finalResult, do.combine(df[,-1], resultData, var1, var2))
+  
+  finalResult$actual <- as.character(finalResult$actual)
+  finalResult$actual[which(finalResult$actual %in% '0')] <- var1
+  finalResult$actual[which(finalResult$actual %in% '1')] <- var2
+  finalResult$actual <- as.factor(finalResult$actual)
+  
+  return(finalResult)
+}
+```
+
+```{r}
+bait_all.final <- do.binary(bait_all, "bait", flag = "all")
+bias_all.final <- do.binary(bias_all, "bait", flag = "all")
+bs_all.final <- do.binary(bs_all, "bait", flag = "all")
+conspiracy_all.final <- do.binary(conspiracy_all, "bait", flag = "all")
+fake_all.final <- do.binary(fake_all, "bait", flag = "all")
+hate_all.final <- do.binary(hate_all, "bait", flag = "all")
+junksci_all.final <- do.binary(junksci_all, "bait", flag = "all")
+satire_all.final <- do.binary(satire_all, "bait", flag = "all")
+```
+
+```{r}
+bait_satire.final <- do.binary(bait_satire, "bait", "satire", flag = "one")
+
+#bait vs all
+bait_bias.final <- do.binary(bait_bias, "bait", "bias", flag = "one")
+bait_bs.final <- do.binary(bait_bs, "bait", "bs", flag = "one")
+bait_conspiracy.final <- do.binary(bait_conspiracy, "bait", "conspiracy", flag = "one")
+bait_fake.final <- do.binary(bait_fake, "bait", "fake", flag = "one")
+bait_hate.final <- do.binary(bait_hate, "bait", "hate", flag = "one")
+bait_junksci.final <- do.binary(bait_junksci, "bait", "junksci", flag = "one")
+bait_satire.final <- do.binary(bait_satire, "bait", "satire", flag = "one")
+
+#bias vs all
+bias_bs.final <- do.binary(bias_bs, "bias", "bs", flag = "one")
+bias_conspiracy.final <- do.binary(bias_conspiracy, "bias", "conspiracy", flag = "one")
+bias_fake.final <- do.binary(bias_fake, "bias", "fake", flag = "one")
+bias_hate.final <- do.binary(bias_hate, "bias", "hate", flag = "one")
+bias_junksci.final <- do.binary(bias_junksci, "bias", "junksci", flag = "one")
+bias_satire.final <- do.binary(bias_satire, "bias", "satire", flag = "one")
+
+#bs vs all
+bs_conspiracy.final <- do.binary(bs_conspiracy, "bs", "conspiracy", flag = "one")
+bs_fake.final <- do.binary(bs_fake, "bs", "fake", flag = "one")
+bs_hate.final <- do.binary(bs_hate, "bs", "hate", flag = "one")
+bs_junksci.final <- do.binary(bs_junksci, "bs", "junksci", flag = "one")
+bs_satire.final <- do.binary(bs_satire, "bs", "satire", flag = "one")
+
+#conspiracy vs all
+conspiracy_fake.final <- do.binary(conspiracy_fake, "conspiracy", "fake", flag = "one")
+conspiracy_hate.final <- do.binary(conspiracy_hate, "conspiracy", "hate", flag = "one")
+conspiracy_junksci.final <- do.binary(conspiracy_junksci, "conspiracy", "junksci", flag = "one")
+conspiracy_satire.final <- do.binary(conspiracy_satire, "conspiracy", "satire", flag = "one")
+
+#fake vs all
+fake_hate.final <- do.binary(fake_hate, "fake", "hate", flag = "one")
+fake_junksci.final <- do.binary(fake_junksci, "fake", "junksci", flag = "one")
+fake_satire.final <- do.binary(fake_satire, "fake", "satire", flag = "one")
+
+#hate vs all
+hate_junksci.final <- do.binary(hate_junksci, "hate", "junksci", flag = "one")
+hate_satire.final <- do.binary(hate_satire, "hate", "satire", flag = "one")
+
+#junksci vs all
+junksci_satire.final <- do.binary(junksci_satire, "junksci", "satire", flag = "one")
+
+```
+
+```{r merge}
+
+do.merge <- function(myList){
+MyMerge <- function(x, y){
+df <- merge(x, y, by= colnames(x), all = T)
+return(df)
+}
+
+#  dat <- Reduce(MyMerge, 
+#        list(final.bait_bias, final.bait_bs, final.bait_conspiracy, final.bait_fake, final.bait_hate, final.bait_junksci, final.bait_satire,
+#             final.bias_bs, final.bias_conspiracy, final.bias_fake, final.bias_hate, final.bias_junksci, final.bias_satire,
+#             final.bs_conspiracy, final.bs_fake, final.bs_hate, final.bs_junksci, final.bs_satire, 
+#             final.conspiracy_fake, final.conspiracy_hate, final.conspiracy_junksci, final.conspiracy_satire, 
+#             final.fake_hate, final.fake_junksci, final.fake_satire, 
+#             final.hate_junksci, final.hate_satire, 
+#             final.junksci_satire))
+  
+
+dat <- Reduce(MyMerge, myList)
+
+  #dat$x <- as.character(dat$x)
+  dat$actual <- as.character(dat$actual)
+  dat$lr <- as.character(dat$lr)
+  dat$knn1 <- as.character(dat$knn1)
+  dat$knn3 <- as.character(dat$knn3)
+  dat$nb <- as.character(dat$nb)
+  dat$dtree <- as.character(dat$dtree)
+  dat$dtreeprune <- as.character(dat$dtreeprune)
+  dat$svm <- as.character(dat$svm)
+  dat$xg <- as.character(dat$xg)
+  dat$ada <- as.character(dat$ada)
+  
+  
+  dat[dat == "bait"] <- 1
+  dat[dat == "bias"] <- 2
+  dat[dat == "bs"] <- 3
+  dat[dat == "conspiracy"] <- 4
+  dat[dat == "fake"] <- 5
+  dat[dat == "hate"] <- 6
+  dat[dat == "junksci"] <- 7
+  dat[dat == "satire"] <- 8
+
+  dat$actual <- as.numeric(dat$actual)
+  dat$lr <- as.numeric(dat$lr)
+  dat$knn1 <- as.numeric(dat$knn1)
+  dat$knn3 <- as.numeric(dat$knn3)
+  dat$nb <- as.numeric(dat$nb)
+  dat$dtree <- as.numeric(dat$dtree)
+  dat$dtreeprune <- as.numeric(dat$dtreeprune)
+  dat$svm <- as.numeric(dat$svm)
+  dat$xg <- as.numeric(dat$xg)
+  dat$ada <- as.numeric(dat$ada)
+
+  
+  dat$x <- as.numeric(dat$x)
+  
+  
+  output <- data.frame(x = character(),
+                       actual = character(),
+                       lr = character(),
+                       knn1 = character(),
+                       knn3 = character(),
+                       nb = character(),
+                       dtree = character(),
+                       dtreeprune = character(),
+                       svm = character(),
+                       xg = character(),
+                       ada = character())
+ 
+  for (i in 1:max(dat$x)){
+    test <- dat[which(dat$x == i),]
+    mode <- apply(test[1:nrow(test),],2,mfv)
+    for (j in 2:9){
+      if (length(mode[[j]])>1){
+        mode[[j]] = mode[[j]][1]
+      }   
+    }
+    mode <- unlist(mode)
+    #print(mode)
+    output <- rbind(output,mode)
+  }
+  
+  
+  colnames(output) <- c("x","actual","lr","knn1","knn3","nb","dtree","dtreeprune","svm","xg","ada")
+ 
+  return(output)
+}
+```
+
+```{r output}
+output.one <- do.merge(list(bait_bias.final, bait_bs.final, bait_conspiracy.final, bait_fake.final, bait_hate.final, bait_junksci.final, bait_satire.final, bias_bs.final, bias_conspiracy.final, bias_fake.final, bias_hate.final, bias_junksci.final, bias_satire.final, bs_conspiracy.final, bs_fake.final, bs_hate.final, bs_junksci.final, bs_satire.final, conspiracy_fake.final, conspiracy_hate.final, conspiracy_junksci.final, conspiracy_satire.final, fake_hate.final, fake_junksci.final, fake_satire.final, hate_junksci.final, hate_satire.final, junksci_satire.final))
+
+output.all <- do.merge(list(bait_all.final,bias_all.final,bs_all.final,conspiracy_all.final,fake_all.final,hate_all.final,junksci_all.final,satire_all.final))
+```
+
+```{r Evaluation_Implementation}
+library(caret)
+library(ROCR)
+
+#output <- read.csv("C:/Users/sowmi_n4gxixd/Box Sync/Spring 2017/INFSCI 2160 Data Mining_Wed_3_6/Final_Project/Final/output.csv")[,-1]
+
+do.evaluate <- function(df){
+evalu<- dim(1)
+for(i in 3:11){
+  #i=3
+  confMat <- confusionMatrix(df$actual,df[,i])
+  confMat <- confMat[[2]] 
+  error <- 0
+  accuracy <- 0
+  precision <- 0
+  recall <- 0
+  f_score <- 0
+
+  for(j in 1:8){
+    #j=1
+    tp <- confMat[j,j]
+    tp <- as.numeric(tp)
+
+    fn <- colSums(confMat, dims = 1)[j] - tp
+    fn <- as.numeric(fn)
+    #fn <- sum(confusionMatrix_lr[2:8,1]) #fn <- as.numeric(fn)
+
+    fp <- rowSums(confMat, dims = 1)[j] - tp
+    fp <- as.numeric(fp)
+    #fp <- sum(confusionMatrix_lr[1,2:8]) #fp <- as.numeric(fp)
+
+    tn <- sum(confMat) - tp - fn - fp
+    tn <- as.numeric(tn)
+    #tn <- sum(rowSums(confusionMatrix_lr[2:8,2:8])) #tn <- as.numeric(tn)
+    #Evaluation
+    error <- error + ((fn+fp)/sum(confMat))
+    accuracy <- accuracy + ((tn+tp)/sum(confMat))
+    precision <- precision + (tp/(tp+fp))
+    recall <- recall + (tp/(tp+fn))
+    
+    #f_score <- f_score + ((2* precision * recall) /(precision + recall))
+    #sensitivity <- tp / (tp+fn)
+  }
+  #Mean calculation
+  mean_accuracy  <- accuracy/8
+  mean_error     <- error/8
+  mean_precision <- precision/8
+  mean_recall    <- recall/8
+  #mean_fscore    <- f_score/8
+  mean_fscore <- (2* mean_precision * mean_recall) /(mean_precision + mean_recall)
+  #ROC1 <- roc(output$actual, output[,i])
+  #AUC1 <- auc(ROC1)
+  #AUC1
+  itis<- rbind(mean_accuracy,mean_error,mean_precision,mean_recall, mean_fscore)
+  
+  evalu<- cbind(evalu,itis)
+}
+
+colnames(evalu) <- c("lr","knn1","knn3","nb","dtree","dtreeprune","svm","xg","ada")
+rownames(evalu) <- c("accuracy","error","precision","recall","f_score")
+return(evalu)
+}
+
+```
+
+```{r evaluation}
+all.evalu <- do.evaluate(output.all)
+one.evalu <- do.evaluate(output.one)
+```
