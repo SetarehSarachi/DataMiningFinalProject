@@ -1,0 +1,3 @@
+Title: app
+DisplayMode: Showcase
+Type: Shiny
